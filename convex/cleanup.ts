@@ -13,25 +13,67 @@ export const cleanupOldData = internalAction({
   handler: async (
     ctx
   ): Promise<{
-    snapshotDeleted: number;
+    snapshotsDeleted: number;
+    scoresDeleted: number;
+    summariesDeleted: number;
+    aiExpiredDeleted: number;
   }> => {
     const now = Date.now();
 
-    // Clean up price snapshots older than 26 hours
+    // 1. Clean up price snapshots older than 26 hours (loop in batches)
     const snapshotCutoff = now - 26 * 60 * 60 * 1000;
-    const snapshotDeleted = await ctx.runMutation(
-      internal.cleanup.deleteOldSnapshots,
-      {
-        cutoff: snapshotCutoff,
-        batchSize: 500, // Increased batch size for efficiency
-      }
+    let snapshotsDeleted = 0;
+    while (true) {
+      const deleted: number = await ctx.runMutation(
+        internal.cleanup.deleteOldSnapshots,
+        {
+          cutoff: snapshotCutoff,
+          batchSize: 500,
+        }
+      );
+      snapshotsDeleted += deleted;
+      if (deleted < 500 || snapshotsDeleted >= 50000) break;
+    }
+
+    // 2. Clean up scores older than 48 hours
+    const scoreCutoff = now - 48 * 60 * 60 * 1000;
+    let scoresDeleted = 0;
+    while (true) {
+      const deleted: number = await ctx.runMutation(
+        internal.cleanup.deleteOldScores,
+        {
+          cutoff: scoreCutoff,
+          batchSize: 500,
+        }
+      );
+      scoresDeleted += deleted;
+      if (deleted < 500 || scoresDeleted >= 10000) break;
+    }
+
+    // 3. Clean up summaries older than 24 hours
+    const summaryCutoff = now - 24 * 60 * 60 * 1000;
+    const summariesDeleted: number = await ctx.runMutation(
+      internal.cleanup.deleteOldSummaries,
+      { cutoff: summaryCutoff }
     );
 
+    // 4. Clean up expired AI analyses
+    const aiResult = await ctx.runMutation(
+      internal.aiAnalysis.cleanupExpired,
+      {}
+    );
+    const aiExpiredDeleted = aiResult?.deleted || 0;
 
     console.log(
-      `Cleanup completed: ${snapshotDeleted} snapshots`
+      `Cleanup completed: ${snapshotsDeleted} snapshots, ${scoresDeleted} scores, ${summariesDeleted} summaries, ${aiExpiredDeleted} AI analyses deleted.`
     );
-    return { snapshotDeleted };
+
+    return {
+      snapshotsDeleted,
+      scoresDeleted,
+      summariesDeleted,
+      aiExpiredDeleted,
+    };
   },
 });
 
@@ -41,11 +83,12 @@ export const deleteOldSnapshots = internalMutation({
     batchSize: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const batchSize = args.batchSize || 100;
+    const batchSize = args.batchSize || 500;
 
+    // Use by_time index instead of full table scan
     const oldSnapshots = await ctx.db
       .query('priceSnapshots')
-      .filter((q) => q.lt(q.field('timestampMs'), args.cutoff))
+      .withIndex('by_time', (q) => q.lt('timestampMs', args.cutoff))
       .take(batchSize);
 
     let deleted = 0;
@@ -54,13 +97,52 @@ export const deleteOldSnapshots = internalMutation({
       deleted++;
     }
 
-    if (deleted > 0) {
-      console.log(`Deleted ${deleted} old price snapshots`);
-    }
     return deleted;
   },
 });
 
+export const deleteOldScores = internalMutation({
+  args: {
+    cutoff: v.number(),
+    batchSize: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const batchSize = args.batchSize || 500;
+
+    const oldScores = await ctx.db
+      .query('scores_lite')
+      .filter((q) => q.lt(q.field('updatedAt'), args.cutoff))
+      .take(batchSize);
+
+    let deleted = 0;
+    for (const score of oldScores) {
+      await ctx.db.delete(score._id);
+      deleted++;
+    }
+
+    return deleted;
+  },
+});
+
+export const deleteOldSummaries = internalMutation({
+  args: {
+    cutoff: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const oldSummaries = await ctx.db
+      .query('marketSummary')
+      .filter((q) => q.lt(q.field('generatedAt'), args.cutoff))
+      .collect();
+
+    let deleted = 0;
+    for (const summary of oldSummaries) {
+      await ctx.db.delete(summary._id);
+      deleted++;
+    }
+
+    return deleted;
+  },
+});
 
 // Emergency clear all data (use with caution)
 export const clearAllData = internalMutation({

@@ -1,20 +1,10 @@
 'use client';
 
-import { useEffect, useState, memo } from 'react';
+import { useState, memo } from 'react';
 import { OnboardingModal } from './onboarding-modal';
 
 export const Header = memo(function Header() {
-  const [, setCurrentTime] = useState(new Date());
-  const [isLive] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
 
   return (
     <>
@@ -101,14 +91,12 @@ export const Header = memo(function Header() {
             <span className="relative z-10">How</span>
             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-tremor-high/20 to-tremor-extreme/20 transition-transform group-hover:translate-x-0" />
           </button>
-          {isLive && (
-            <span className="flex items-center gap-1 rounded border border-tremor-pulse/50 bg-tremor-pulse/10 px-2 py-0.5">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-tremor-pulse"></span>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-tremor-pulse">
-                LIVE
-              </span>
+          <span className="flex items-center gap-1 rounded border border-tremor-pulse/50 bg-tremor-pulse/10 px-2 py-0.5">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-tremor-pulse"></span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-tremor-pulse">
+              LIVE
             </span>
-          )}
+          </span>
         </div>
       </header>
 

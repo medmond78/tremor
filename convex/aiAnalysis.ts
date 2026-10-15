@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { mutation, query, action } from './_generated/server';
+import { query, action, internalMutation } from './_generated/server';
 import { api, internal } from './_generated/api';
 import { logger } from '../lib/logger';
 
@@ -39,7 +39,10 @@ export const requestAnalysis: any = action({
     }
 
     // Generate new analysis using the internal action
-    const result = await ctx.runAction((internal.aiActions as any).generateAnalysis, args);
+    const result = await ctx.runAction(
+      (internal.aiActions as any).generateAnalysis,
+      args
+    );
 
     return result;
   },
@@ -103,7 +106,7 @@ export const hasAnalysis = query({
 });
 
 // Admin function to clear expired analyses (can be called periodically)
-export const cleanupExpired = mutation({
+export const cleanupExpired = internalMutation({
   args: {},
   handler: async (ctx) => {
     const now = Date.now();
@@ -126,7 +129,7 @@ export const cleanupExpired = mutation({
 });
 
 // Admin function to clear ALL analyses (for regeneration with better prompts)
-export const clearAllAnalyses = mutation({
+export const clearAllAnalyses = internalMutation({
   args: {},
   handler: async (ctx) => {
     // Get all analyses

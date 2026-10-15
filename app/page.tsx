@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/sidebar';
 import { TremorCard } from '@/components/tremor-card';
 import { TremorDetailPanel } from '@/components/tremor-detail-panel';
 import { useTremorData } from '@/hooks/use-tremor-data';
+import { MarketMovement } from '@/lib/types';
 import { useState, useEffect } from 'react';
 
 export default function Home() {
@@ -15,7 +16,8 @@ export default function Home() {
   const [volumeFilter, setVolumeFilter] = useState<
     'all' | 'whale' | 'high' | 'medium' | 'low'
   >('all');
-  const [selectedMovement, setSelectedMovement] = useState<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [selectedMovement, setSelectedMovement] =
+    useState<MarketMovement | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isChangingWindow, setIsChangingWindow] = useState(false);
   const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
@@ -421,6 +423,8 @@ export default function Home() {
                     {/* Mobile Menu Button */}
                     <button
                       onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                      aria-label="Toggle navigation menu"
+                      aria-expanded={mobileMenuOpen}
                       className="p-1.5 text-zinc-400 transition-colors hover:text-zinc-200 lg:hidden"
                     >
                       <svg
@@ -486,9 +490,8 @@ export default function Home() {
                         movement={move}
                         isSelected={selectedMovement?.id === move.id}
                         onClick={() => {
-                          // Toggle selection - clicking same card closes panel
-                          setSelectedMovement(
-                            selectedMovement?.id === move.id ? null : move
+                          setSelectedMovement((prev) =>
+                            prev?.id === move.id ? null : move
                           );
                         }}
                       />

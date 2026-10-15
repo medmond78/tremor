@@ -96,6 +96,9 @@ export function TremorDetailPanel({
 
         {/* Modal Content - narrower like intelligence modal */}
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="detail-panel-title"
           className={`relative w-full max-w-3xl transform transition-all duration-300 ${
             isVisible ? 'scale-100' : 'scale-95'
           }`}
@@ -114,33 +117,39 @@ export function TremorDetailPanel({
                   {/* Title and close button */}
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex-1 pr-2">
-                      <h2 className="text-lg font-bold leading-tight text-white md:text-xl">
+                      <h2
+                        id="detail-panel-title"
+                        className="text-lg font-bold leading-tight text-white md:text-xl"
+                      >
                         {movement?.title}
                       </h2>
-                      
+
                       {/* Only show market details if multiple markets or if different from title */}
-                      {movement?.marketMovements && movement.marketMovements[0] && (
-                        movement.marketMovements.length > 1 ? (
+                      {movement?.marketMovements &&
+                        movement.marketMovements[0] &&
+                        (movement.marketMovements.length > 1 ? (
                           <>
-                            <div className="mt-3 text-[9px] uppercase tracking-wider text-zinc-500 mb-1">
-                              LEADING MARKET ({movement.marketMovements.length} MARKETS TOTAL)
+                            <div className="mb-1 mt-3 text-[9px] uppercase tracking-wider text-zinc-500">
+                              LEADING MARKET ({movement.marketMovements.length}{' '}
+                              MARKETS TOTAL)
                             </div>
                             <p className="text-sm font-medium leading-snug text-zinc-200">
                               {movement.marketMovements[0].question}
                             </p>
                           </>
                         ) : (
-                          movement.marketMovements[0].question !== movement.title && (
+                          movement.marketMovements[0].question !==
+                            movement.title && (
                             <p className="mt-2 text-sm text-zinc-300">
                               {movement.marketMovements[0].question}
                             </p>
                           )
-                        )
-                      )}
+                        ))}
                     </div>
                     <button
                       className="-mt-1 text-xl text-zinc-500 transition-colors hover:text-zinc-300"
                       onClick={onClose}
+                      aria-label="Close details panel"
                     >
                       ×
                     </button>
@@ -150,28 +159,35 @@ export function TremorDetailPanel({
                   <div className="mt-3 flex items-center gap-4 text-xs">
                     <div className="flex items-center gap-2">
                       <span className="text-zinc-500">Intensity:</span>
-                      <span className={`font-bold ${
-                        movement?.seismoScore && movement.seismoScore >= 7.5
-                          ? 'text-tremor-extreme'
-                          : movement?.seismoScore && movement.seismoScore >= 5
-                            ? 'text-tremor-high'
-                            : movement?.seismoScore && movement.seismoScore >= 2.5
-                              ? 'text-tremor-moderate'
-                              : 'text-zinc-300'
-                      }`}>
+                      <span
+                        className={`font-bold ${
+                          movement?.seismoScore && movement.seismoScore >= 7.5
+                            ? 'text-tremor-extreme'
+                            : movement?.seismoScore && movement.seismoScore >= 5
+                              ? 'text-tremor-high'
+                              : movement?.seismoScore &&
+                                  movement.seismoScore >= 2.5
+                                ? 'text-tremor-moderate'
+                                : 'text-zinc-300'
+                        }`}
+                      >
                         {movement?.seismoScore?.toFixed(1)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-zinc-500">Volume:</span>
                       <span className="text-zinc-300">
-                        {formatVolume(movement?.totalVolume || movement?.volume || 0) || '—'}
+                        {formatVolume(
+                          movement?.totalVolume || movement?.volume || 0
+                        ) || '—'}
                       </span>
                     </div>
                     {movement?.category && (
                       <div className="flex items-center gap-2">
                         <span className="text-zinc-500">Category:</span>
-                        <span className="text-zinc-300">{movement.category}</span>
+                        <span className="text-zinc-300">
+                          {movement.category}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -269,14 +285,18 @@ export function TremorDetailPanel({
               )}
 
               {/* Individual Market Movements - show when we have the data */}
-              {movement.marketMovements && movement.marketMovements.length > 0 ? (
+              {movement.marketMovements &&
+              movement.marketMovements.length > 0 ? (
                 <div>
                   <div className="mb-4 flex items-center justify-between border-b border-zinc-800/30 pb-2">
                     <span className="text-xs uppercase tracking-wider text-zinc-500">
                       Market Breakdown
                     </span>
                     <span className="text-xs text-zinc-400">
-                      {movement.marketMovements.length} {movement.marketMovements.length === 1 ? 'market' : 'markets'}
+                      {movement.marketMovements.length}{' '}
+                      {movement.marketMovements.length === 1
+                        ? 'market'
+                        : 'markets'}
                     </span>
                   </div>
                   <div className="space-y-3">
@@ -291,88 +311,105 @@ export function TremorDetailPanel({
                         );
                       const displayMarkets = showAll
                         ? movement.marketMovements
-                        : significantMarkets.length > 0 ? significantMarkets : movement.marketMovements;
+                        : significantMarkets.length > 0
+                          ? significantMarkets
+                          : movement.marketMovements;
 
                       return (
                         <>
                           {displayMarkets.map((market) => {
                             const changeAbs = Math.abs(market.change);
                             const isSignificant = changeAbs >= 5;
-                            
+
                             return (
-                              <div key={market.conditionId} className={`group rounded border p-3 transition-all ${
-                                isSignificant 
-                                  ? 'border-zinc-700/50 bg-zinc-900/30' 
-                                  : 'border-zinc-800/30 bg-zinc-950/50'
-                              }`}>
+                              <div
+                                key={market.conditionId}
+                                className={`group rounded border p-3 transition-all ${
+                                  isSignificant
+                                    ? 'border-zinc-700/50 bg-zinc-900/30'
+                                    : 'border-zinc-800/30 bg-zinc-950/50'
+                                }`}
+                              >
                                 {/* Market question */}
                                 <h4 className="mb-4 text-sm font-medium leading-relaxed text-zinc-200">
                                   {market.question}
                                 </h4>
-                                
+
                                 {/* Price movement bar */}
                                 <div className="mb-2 flex items-center gap-3">
                                   <div className="flex-1">
                                     <div className="flex h-6 items-center rounded bg-zinc-900/50">
                                       {/* Previous price marker */}
-                                      <div 
+                                      <div
                                         className="relative h-full border-r-2 border-zinc-600"
-                                        style={{ width: `${market.prevPrice * 100}%` }}
+                                        style={{
+                                          width: `${market.prevPrice * 100}%`,
+                                        }}
                                       >
                                         <span className="absolute -top-5 right-0 text-[10px] text-zinc-500">
                                           {Math.round(market.prevPrice * 100)}%
                                         </span>
                                       </div>
                                       {/* Current price fill */}
-                                      <div 
+                                      <div
                                         className={`h-full transition-all ${
-                                          market.change > 0 
-                                            ? 'bg-trend-up/30' 
-                                            : market.change < 0 
-                                              ? 'bg-trend-down/30' 
+                                          market.change > 0
+                                            ? 'bg-trend-up/30'
+                                            : market.change < 0
+                                              ? 'bg-trend-down/30'
                                               : 'bg-zinc-700/30'
                                         }`}
-                                        style={{ 
-                                          width: `${Math.abs(market.currPrice - market.prevPrice) * 100}%` 
+                                        style={{
+                                          width: `${Math.abs(market.currPrice - market.prevPrice) * 100}%`,
                                         }}
                                       />
                                       {/* Current price marker */}
                                       <div className="relative h-full">
-                                        <div className={`absolute top-0 h-full w-0.5 ${
-                                          isSignificant 
-                                            ? 'bg-white' 
-                                            : 'bg-zinc-400'
-                                        }`} />
-                                        <span className={`absolute -bottom-5 left-0 text-[10px] font-bold ${
-                                          isSignificant 
-                                            ? 'text-white' 
-                                            : 'text-zinc-300'
-                                        }`}>
+                                        <div
+                                          className={`absolute top-0 h-full w-0.5 ${
+                                            isSignificant
+                                              ? 'bg-white'
+                                              : 'bg-zinc-400'
+                                          }`}
+                                        />
+                                        <span
+                                          className={`absolute -bottom-5 left-0 text-[10px] font-bold ${
+                                            isSignificant
+                                              ? 'text-white'
+                                              : 'text-zinc-300'
+                                          }`}
+                                        >
                                           {Math.round(market.currPrice * 100)}%
                                         </span>
                                       </div>
                                     </div>
                                   </div>
-                                  
+
                                   {/* Change indicator */}
                                   {changeAbs >= 0.1 && (
-                                    <div className={`flex items-baseline gap-1 ${
-                                      market.change > 0
-                                        ? 'text-trend-up'
-                                        : 'text-trend-down'
-                                    }`}>
+                                    <div
+                                      className={`flex items-baseline gap-1 ${
+                                        market.change > 0
+                                          ? 'text-trend-up'
+                                          : 'text-trend-down'
+                                      }`}
+                                    >
                                       <span className="text-xs">
                                         {market.change > 0 ? '↑' : '↓'}
                                       </span>
-                                      <span className={`font-bold ${
-                                        isSignificant ? 'text-lg' : 'text-base'
-                                      }`}>
+                                      <span
+                                        className={`font-bold ${
+                                          isSignificant
+                                            ? 'text-lg'
+                                            : 'text-base'
+                                        }`}
+                                      >
                                         {changeAbs.toFixed(1)}%
                                       </span>
                                     </div>
                                   )}
                                 </div>
-                                
+
                                 {/* Volume if available */}
                                 {market.volume > 0 && (
                                   <div className="mt-3 flex items-center gap-2 text-[10px] text-zinc-500">

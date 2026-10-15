@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 interface OnboardingModalProps {
   isOpen?: boolean;
@@ -15,29 +15,47 @@ export function OnboardingModal({
 }: OnboardingModalProps = {}) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true);
 
   const isOpen =
     controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
 
-  useEffect(() => {
-    if (!autoShow) return;
-    // Check if user has seen onboarding
-    const hasSeenOnboarding = localStorage.getItem('tremor-onboarding-seen');
-    if (!hasSeenOnboarding) {
-      // Small delay for page load
-      setTimeout(() => setInternalIsOpen(true), 800);
+  const handleClose = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('tremor-onboarding-seen', 'true');
     }
-  }, [autoShow]);
-
-  const handleClose = () => {
-    localStorage.setItem('tremor-onboarding-seen', 'true');
+    setHasSeenOnboarding(true);
     if (controlledOnClose) {
       controlledOnClose();
     } else {
       setInternalIsOpen(false);
     }
     setCurrentStep(0); // Reset for next time
-  };
+  }, [controlledOnClose]);
+
+  useEffect(() => {
+    const seen =
+      typeof window !== 'undefined' &&
+      Boolean(localStorage.getItem('tremor-onboarding-seen'));
+    setHasSeenOnboarding(seen);
+    if (!autoShow) return;
+    if (!seen) {
+      const timer = setTimeout(() => setInternalIsOpen(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [autoShow]);
+
+  // Handle escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleClose]);
 
   const steps = [
     {
@@ -262,7 +280,12 @@ export function OnboardingModal({
         className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
         onClick={handleClose}
       />
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 transform p-4">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="onboarding-modal-title"
+        className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 transform p-4"
+      >
         <div
           className="border border-zinc-800/50 bg-zinc-950"
           style={{
@@ -284,9 +307,11 @@ export function OnboardingModal({
                 />
               </svg>
               <div>
-                <h2 className="text-base font-bold text-zinc-100">
-                  {currentStep === 0 &&
-                  !localStorage.getItem('tremor-onboarding-seen')
+                <h2
+                  id="onboarding-modal-title"
+                  className="text-base font-bold text-zinc-100"
+                >
+                  {currentStep === 0 && !hasSeenOnboarding
                     ? 'WELCOME TO TREMOR'
                     : 'HOW TREMOR WORKS'}
                 </h2>
@@ -297,6 +322,7 @@ export function OnboardingModal({
             </div>
             <button
               onClick={handleClose}
+              aria-label="Close modal"
               className="text-zinc-400 transition-colors hover:text-zinc-200"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">

@@ -19,6 +19,7 @@ Please **do not** create a public GitHub issue for security vulnerabilities. Thi
 Send your report to: security@tremor.live
 
 Include the following information:
+
 - Type of vulnerability
 - Full paths of affected source files
 - Steps to reproduce the issue
@@ -45,21 +46,25 @@ We classify vulnerabilities as:
 When contributing to TREMOR.LIVE:
 
 ### Environment Variables
+
 - Never commit `.env` files
 - Use `.env.example` for documentation
 - Rotate keys if accidentally exposed
 
 ### API Keys
+
 - Store all keys in environment variables
 - Never hardcode credentials
 - Use minimal permission scopes
 
 ### Dependencies
+
 - Keep dependencies updated
 - Review security advisories
 - Use `pnpm audit` regularly
 
 ### Data Handling
+
 - Sanitize user inputs
 - Validate data from external APIs
 - Use HTTPS for all external requests
@@ -78,12 +83,13 @@ We support responsible disclosure:
 
 TREMOR.LIVE implements:
 
-- Environment-based configuration
-- No authentication required (read-only public data)
-- Rate limiting on API endpoints
-- Input validation on all user inputs
-- Secure communication with Convex backend
-- No storage of personal user data
+- Environment-based configuration with validated credentials
+- Internal mutation isolation for administrative operations (no public access to cleanup or cache drops)
+- Bearer token authentication on `/sync` HTTP endpoints (`INTERNAL_SYNC_SECRET`)
+- Bounded pagination and input validation on sync actions and mutations
+- Sanitized prompt templating with XML boundaries to prevent prompt injection into LLM explainer services
+- Secure TLS communication with Convex reactive backend
+- Read-only public client surface; no storage of personal user data
 
 ## Contact
 

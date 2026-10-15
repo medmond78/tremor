@@ -5,7 +5,7 @@ import { logger } from '../lib/logger';
 
 // xAI Grok API configuration
 const GROK_API_URL = 'https://api.x.ai/v1/chat/completions';
-const GROK_MODEL = 'grok-4'; // Back to Grok 4
+const GROK_MODEL = process.env.XAI_MODEL || 'grok-2-latest';
 
 interface SearchParameters {
   mode: 'auto' | 'on' | 'off';
@@ -94,18 +94,21 @@ export const generateAnalysis: any = internalAction({
       // Extract key terms for better search targeting
       const titleKeywords = args.title
         .toLowerCase()
-        .replace(/will|the|be|in|at|on|to|for|of|and|or/gi, '') // Remove common words
+        .replace(/\b(will|the|be|in|at|on|to|for|of|and|or)\b/gi, ' ') // Remove common words safely
         .split(/\s+/)
         .filter((word) => word.length > 3)
         .slice(0, 3)
         .join(' ');
 
+      const sanitizedTitle = args.title.replace(/[<>]/g, '');
+      const sanitizedQuestion = args.marketQuestion?.replace(/[<>]/g, '');
+
       // Prompt focused on what smart money is anticipating
       const analysisPrompt = `
         A prediction market just moved BEFORE mainstream news:
         
-        Market: ${args.title}
-        ${args.marketQuestion ? `Question: ${args.marketQuestion}` : ''}
+        <market_title>${sanitizedTitle}</market_title>
+        ${sanitizedQuestion ? `<market_question>${sanitizedQuestion}</market_question>` : ''}
         Category: ${args.category || 'general'}
         Movement: ${args.previousValue}% → ${args.currentValue}% (${Math.abs(args.currentValue - args.previousValue).toFixed(1)}% shift)
         Intensity Score: ${args.seismoScore.toFixed(1)}/10 (indicating ${args.seismoScore >= 7.5 ? 'extreme' : args.seismoScore >= 5 ? 'high' : 'moderate'} trading activity)
@@ -218,7 +221,7 @@ async function makeGrokRequest(
       },
     ],
     temperature: 0.7,
-    max_tokens: 10000, // Very generous token limit for complex analyses
+    max_tokens: 500, // 2-3 sentence explanation
   };
 
   if (searchParams) {

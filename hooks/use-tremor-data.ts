@@ -25,11 +25,6 @@ export function useTremorData(window: '5m' | '60m' | '1440m' = '60m') {
     limit: 100, // Increase limit to get more data
   });
 
-  // Get active markets
-  const activeMarkets = useQuery(api.markets.getActiveMarkets, {
-    limit: 100,
-  });
-
   // Process and sort the raw data with stable sorting
   const processedMovements = useMemo(() => {
     if (!topTremors) return [];
@@ -64,8 +59,10 @@ export function useTremorData(window: '5m' | '60m' | '1440m' = '60m') {
         const marketsDown = marketMoves.filter((m: any) => m.change < 0).length;
         const avgChange =
           marketMoves.length > 0
-            ? marketMoves.reduce((sum: number, m: any) => sum + Math.abs(m.change), 0) /
-              marketMoves.length
+            ? marketMoves.reduce(
+                (sum: number, m: any) => sum + Math.abs(m.change),
+                0
+              ) / marketMoves.length
             : 0;
         const correlatedMovement =
           (marketsUp > 0 && marketsDown === 0) ||
@@ -97,7 +94,7 @@ export function useTremorData(window: '5m' | '60m' | '1440m' = '60m') {
             marketMoves.length > 1
               ? {
                   totalMarkets: marketMoves.length,
-                  activeMarkets: activeMarkets.length,
+                  activeMarkets: tremor.activeMarkets ?? activeMarkets.length,
                   marketsUp,
                   marketsDown,
                   averageChange: avgChange,
@@ -213,10 +210,9 @@ export function useTremorData(window: '5m' | '60m' | '1440m' = '60m') {
     }));
 
   return {
-    markets: activeMarkets || [],
     movements: displayedMovements, // Return the controlled, stable data
     suddenMoves,
-    loading: !topTremors && !activeMarkets,
+    loading: !topTremors,
     connected: true,
     lastUpdateTime, // So UI can show "Last updated: X seconds ago"
     isPaused,

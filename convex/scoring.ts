@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { internalAction, internalMutation, query } from './_generated/server';
 import { api, internal } from './_generated/api';
+import { calculateSeismoScore } from '../lib/scoring';
 
 // Compute Seismo score on read (no writes)
 export const computeEventScore = query({
@@ -22,10 +23,9 @@ export const computeEventScore = query({
       return { error: 'No markets found for this event.' };
 
     // For each market: get start/end 5m buckets via index lookups
-    const marketSnapshots = new Map<
-      string,
-      { start?: any; end?: any }
-    >();
+    const marketSnapshots = new Map<string, { start?: any; end?: any }>();
+
+    const bucketStartCutoff = Math.floor(cutoff / 300000) * 300000;
 
     for (const m of markets) {
       const end = await ctx.db
@@ -36,7 +36,9 @@ export const computeEventScore = query({
         .order('desc')
         .first();
 
-      // Get the closest snapshot to the cutoff time (could be slightly after)
+      if (!end) continue;
+
+      // Get the closest snapshot at or before the cutoff time
       const startBefore = await ctx.db
         .query('priceSnapshots')
         .withIndex('by_market_time', (q) =>
@@ -45,6 +47,7 @@ export const computeEventScore = query({
         .order('desc')
         .first();
 
+      // Get the earliest snapshot after cutoff, ensuring it is strictly before 'end'
       const startAfter = await ctx.db
         .query('priceSnapshots')
         .withIndex('by_market_time', (q) =>
@@ -53,10 +56,11 @@ export const computeEventScore = query({
         .order('asc')
         .first();
 
-      // Use the snapshot closest to cutoff time
+      // Use the snapshot closest to cutoff time, never letting start == end if startBefore exists
       let start = startBefore;
       if (
         startAfter &&
+        startAfter.timestampMs < end.timestampMs &&
         (!startBefore ||
           Math.abs(startAfter.timestampMs - cutoff) <
             Math.abs(startBefore.timestampMs - cutoff))
@@ -72,6 +76,7 @@ export const computeEventScore = query({
     let maxChangeAbs = 0;
     let topMarketId = '';
     let topMarketQuestion = '';
+    let topMarketScore = 0;
     let totalVolume = 0;
     let topMarketVolume = 0;
     let activeMarkets = 0;
@@ -93,24 +98,24 @@ export const computeEventScore = query({
 
     for (const [conditionId, pair] of marketSnapshots) {
       const end = pair.end;
-      if (!end) continue; // need an end point
+      if (!end) continue;
       const start = pair.start;
 
       const prev =
-        typeof start?.price01 === 'number' ? start.price01 : end.price01; // carry-forward
-      const curr = typeof end.price01 === 'number' ? end.price01 : prev; // Ensure curr is valid
+        typeof start?.price01 === 'number' ? start.price01 : end.price01;
+      const curr = typeof end.price01 === 'number' ? end.price01 : prev;
 
       // Guard against NaN
       if (!Number.isFinite(prev) || !Number.isFinite(curr)) continue;
 
-      const signedChange = (curr - prev) * 100; // Keep sign for display
+      const signedChange = (curr - prev) * 100;
       const absoluteChangeMagnitude = Math.abs(signedChange);
 
       // Sum volume across the whole window for this market
       const vols = await ctx.db
         .query('priceSnapshots')
         .withIndex('by_market_time', (q) =>
-          q.eq('conditionId', conditionId).gte('timestampMs', cutoff)
+          q.eq('conditionId', conditionId).gte('timestampMs', bucketStartCutoff)
         )
         .filter((q) => q.lte(q.field('timestampMs'), now))
         .collect();
@@ -129,7 +134,7 @@ export const computeEventScore = query({
         question: marketQuestion,
         prevPrice: prev,
         currPrice: curr,
-        change: signedChange, // Store signed change
+        change: signedChange,
         volume: marketVolume,
       });
 
@@ -140,10 +145,23 @@ export const computeEventScore = query({
         highestVolumeMarketVolume = marketVolume;
       }
 
-      // Track market with biggest change (by magnitude)
-      if (absoluteChangeMagnitude > maxChangeAbs) {
+      // Compute market-level score to avoid cross-subsidization exploit
+      const avgMarketPrice = (curr + prev) / 2 || 0.5;
+      const marketUsdVolume = marketVolume * avgMarketPrice;
+      const currentMarketScore = calculateSeismoScore(
+        absoluteChangeMagnitude,
+        marketUsdVolume
+      );
+
+      // Track top market by score, with magnitude tiebreaker
+      if (
+        currentMarketScore > topMarketScore ||
+        (currentMarketScore === topMarketScore &&
+          absoluteChangeMagnitude > maxChangeAbs)
+      ) {
+        topMarketScore = currentMarketScore;
         maxChangeAbs = absoluteChangeMagnitude;
-        maxChange = signedChange; // Store signed value
+        maxChange = signedChange;
         topMarketId = conditionId;
         topMarketQuestion = marketQuestion;
         topMarketVolume = marketVolume;
@@ -154,56 +172,23 @@ export const computeEventScore = query({
 
     allMovements.sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
 
-    // Fallback to highest volume market if no price movement
+    // Fallback to highest volume market if no price movement was found
     if (topMarketId === '' && highestVolumeMarketId !== '') {
       topMarketId = highestVolumeMarketId;
       topMarketQuestion = highestVolumeMarketQuestion;
       topMarketVolume = highestVolumeMarketVolume;
-      // Find the prices for the highest volume market
       const hvmMovement = allMovements.find(
         (m) => m.conditionId === highestVolumeMarketId
       );
       if (hvmMovement) {
         topPrev = hvmMovement.prevPrice;
         topCurr = hvmMovement.currPrice;
-        maxChange = hvmMovement.change; // Use the actual change (might be 0)
+        maxChange = hvmMovement.change;
         maxChangeAbs = Math.abs(hvmMovement.change);
       }
     }
 
-    const avgPrice = 0.5;
-    const usdVolume = totalVolume * avgPrice;
-
-    const minVolume = 1000;
-    const fullVolume = 10000;
-
-    const volumeMultiplier =
-      usdVolume < minVolume
-        ? 0
-        : Math.min(
-            1,
-            Math.sqrt((usdVolume - minVolume) / (fullVolume - minVolume))
-          );
-
-    let baseScore: number;
-    const absChange = maxChangeAbs; // Use the absolute value for scoring
-
-    if (absChange < 1) {
-      baseScore = absChange; // Linear for small changes
-    } else if (absChange < 5) {
-      baseScore = 1 + (absChange - 1) * 0.875; // Gradual increase
-    } else if (absChange < 10) {
-      baseScore = 4.5 + (absChange - 5) * 0.5; // Slower increase
-    } else if (absChange < 20) {
-      baseScore = 7 + (absChange - 10) * 0.3; // Asymptotic approach
-    } else {
-      baseScore = 10; // Max score
-    }
-
-    const seismoScore = Math.max(
-      0,
-      Math.min(10, Math.round(baseScore * volumeMultiplier * 10) / 10)
-    );
+    const seismoScore = topMarketScore;
 
     const windowStr = `${args.windowMinutes}m`;
 

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { MarketSummary } from './market-summary';
 
 interface SidebarProps {
@@ -24,12 +23,6 @@ export function Sidebar({
   selectedVolume = 'all',
   onChangeVolume,
 }: SidebarProps) {
-  const [internalWindow, setInternalWindow] = useState(selectedWindow);
-  const [internalIntensity, setInternalIntensity] = useState(
-    selectedIntensity || 'all'
-  );
-  const [internalVolume, setInternalVolume] = useState(selectedVolume);
-
   const windows = [
     { id: '1440m', label: '24 HOUR', desc: 'Daily trends' },
     { id: '60m', label: '1 HOUR', desc: 'Active shifts' },
@@ -84,17 +77,16 @@ export function Sidebar({
                   | 'high'
                   | 'moderate'
                   | 'low';
-                setInternalIntensity(intensity);
                 onChangeIntensity(intensity);
               }}
               className={`block w-full text-left transition-all ${
-                internalIntensity === filter.id
+                selectedIntensity === filter.id
                   ? 'border-2 bg-zinc-950'
                   : 'border bg-zinc-950 hover:border-zinc-600'
               }`}
               style={{
                 borderColor:
-                  internalIntensity === filter.id
+                  selectedIntensity === filter.id
                     ? filter.id === 'extreme'
                       ? 'rgb(239 68 68)'
                       : filter.id === 'high'
@@ -106,7 +98,7 @@ export function Sidebar({
                             : 'rgb(113 113 122)'
                     : 'rgb(39 39 42 / 0.5)',
                 boxShadow:
-                  internalIntensity === filter.id
+                  selectedIntensity === filter.id
                     ? '0 0 0 1px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.5)'
                     : '0 0 0 1px rgba(255,255,255,0.02), 0 2px 8px rgba(0,0,0,0.3)',
               }}
@@ -155,7 +147,7 @@ export function Sidebar({
                               : filter.range}
                     </div>
                   </div>
-                  {internalIntensity === filter.id && (
+                  {selectedIntensity === filter.id && (
                     <div className="h-2 w-2 animate-pulse rounded-full bg-tremor-pulse"></div>
                   )}
                 </div>
@@ -180,17 +172,16 @@ export function Sidebar({
                   | 'high'
                   | 'medium'
                   | 'low';
-                setInternalVolume(volume);
                 onChangeVolume?.(volume);
               }}
               className={`block w-full text-left transition-all ${
-                internalVolume === filter.id
+                selectedVolume === filter.id
                   ? 'border border-blue-500/50 bg-zinc-950 shadow-lg'
                   : 'border border-zinc-800/50 bg-zinc-950 hover:border-zinc-700'
               }`}
               style={{
                 boxShadow:
-                  internalVolume === filter.id
+                  selectedVolume === filter.id
                     ? '0 0 0 1px rgba(59,130,246,0.1), 0 4px 12px rgba(0,0,0,0.5)'
                     : '0 0 0 1px rgba(255,255,255,0.02), 0 2px 8px rgba(0,0,0,0.3)',
               }}
@@ -210,7 +201,7 @@ export function Sidebar({
                       {filter.desc}
                     </div>
                   </div>
-                  {internalVolume === filter.id && (
+                  {selectedVolume === filter.id && (
                     <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500"></div>
                   )}
                 </div>
@@ -230,17 +221,16 @@ export function Sidebar({
               key={window.id}
               onClick={() => {
                 const w = window.id as '5m' | '60m' | '1440m';
-                setInternalWindow(w);
                 onChangeWindow(w);
               }}
               className={`block w-full text-left transition-all ${
-                internalWindow === window.id
+                selectedWindow === window.id
                   ? 'border border-tremor-pulse/50 bg-zinc-950 shadow-lg'
                   : 'border border-zinc-800/50 bg-zinc-950 hover:border-zinc-700'
               }`}
               style={{
                 boxShadow:
-                  internalWindow === window.id
+                  selectedWindow === window.id
                     ? '0 0 0 1px rgba(34,211,238,0.1), 0 4px 12px rgba(0,0,0,0.5)'
                     : '0 0 0 1px rgba(255,255,255,0.02), 0 2px 8px rgba(0,0,0,0.3)',
               }}
@@ -255,7 +245,7 @@ export function Sidebar({
                       {window.desc}
                     </div>
                   </div>
-                  {internalWindow === window.id && (
+                  {selectedWindow === window.id && (
                     <div className="h-2 w-2 animate-pulse rounded-full bg-tremor-pulse"></div>
                   )}
                 </div>

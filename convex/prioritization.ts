@@ -1,7 +1,13 @@
 import { v } from 'convex/values';
-import { internalMutation, query } from './_generated/server';
+import {
+  internalAction,
+  internalMutation,
+  internalQuery,
+  query,
+} from './_generated/server';
 import { internal } from './_generated/api';
 import { logger } from '../lib/logger';
+import { calculateVolatility } from '../lib/scoring';
 
 // MARKET PRIORITIZATION ALGORITHM
 // Determines which markets to sync most frequently based on activity
@@ -100,31 +106,6 @@ export const updateMarketPriority = internalMutation({
   },
 });
 
-// Calculate price volatility (standard deviation of returns)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function calculateVolatility(snapshots: any[]): number {
-  if (snapshots.length < 2) return 0;
-
-  // Calculate returns
-  const returns: number[] = [];
-  for (let i = 1; i < snapshots.length; i++) {
-    const prevPrice = snapshots[i - 1].price01;
-    const currPrice = snapshots[i].price01;
-    if (prevPrice > 0) {
-      const ret = (currPrice - prevPrice) / prevPrice;
-      returns.push(ret);
-    }
-  }
-
-  if (returns.length === 0) return 0;
-
-  // Calculate standard deviation
-  const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
-  const variance =
-    returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / returns.length;
-  return Math.sqrt(variance);
-}
-
 // Get markets by priority for syncing
 export const getMarketsByPriority = query({
   args: {
@@ -183,14 +164,25 @@ export const getMarketsByPriority = query({
   },
 });
 
-// Batch update all market priorities (run periodically)
-export const updateAllPriorities = internalMutation({
+// Query active markets to prioritize
+export const getActiveMarketsForPriority = internalQuery({
   args: {},
   handler: async (ctx) => {
-    const markets = await ctx.db
+    return await ctx.db
       .query('markets')
       .withIndex('by_active_volume', (q) => q.eq('active', true))
-      .collect();
+      .take(100);
+  },
+});
+
+// Batch update all market priorities (run periodically via action)
+export const updateAllPriorities = internalAction({
+  args: {},
+  handler: async (ctx) => {
+    const markets = await ctx.runQuery(
+      internal.prioritization.getActiveMarketsForPriority,
+      {}
+    );
 
     let updated = 0;
     for (const market of markets) {
@@ -198,8 +190,6 @@ export const updateAllPriorities = internalMutation({
         conditionId: market.conditionId,
       });
       updated++;
-
-      // Batch limit to avoid timeout
       if (updated >= 100) break;
     }
 
