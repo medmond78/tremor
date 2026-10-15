@@ -50,15 +50,17 @@ export const syncEvents = internalAction({
       const MIN_TOTAL_VOLUME = 5000; // $5k+ total volume
       const MIN_LIQUIDITY = 2000; // $2k+ liquidity
 
-      // Fetch ALL events using pagination
-      const allEvents: PolymarketEvent[] = [];
       let offset = 0;
       const limit = 100;
+      let totalEvents = 0;
+      let totalMarkets = 0;
+      let filteredEvents = 0;
+      const MAX_PAGES = 10; // Top 1,000 highest volume events
 
-      console.log('Starting event sync with pagination...');
+      console.log('Starting event sync with pagination (sorted by volume)...');
 
-      while (true) {
-        const url = `https://gamma-api.polymarket.com/events/pagination?limit=${limit}&offset=${offset}&active=true&closed=false`;
+      for (let pageIdx = 0; pageIdx < MAX_PAGES; pageIdx++) {
+        const url = `https://gamma-api.polymarket.com/events/pagination?limit=${limit}&offset=${offset}&active=true&closed=false&order=volume24hr&ascending=false`;
         const response = await fetch(url, {
           headers: {
             Accept: 'application/json',
@@ -70,99 +72,100 @@ export const syncEvents = internalAction({
         }
 
         const data = await response.json();
-        allEvents.push(...data.data);
+        const pageEvents: PolymarketEvent[] = data.data || [];
+        if (pageEvents.length === 0) break;
 
-        // Check if we have more pages
-        if (!data.pagination?.hasMore) break;
-        offset += limit;
+        let pageHadQualifyingEvents = false;
 
-        // Safety limit to avoid infinite loops
-        if (offset > 10000) {
-          console.warn('Reached maximum pagination limit');
-          break;
-        }
-      }
+        for (const event of pageEvents) {
+          // Skip events without markets
+          if (!event.markets || event.markets.length === 0) continue;
 
-      console.log(`Fetched ${allEvents.length} total events from API`);
+          // Calculate total volume for the event
+          const eventVolume24hr = event.markets.reduce(
+            (sum: number, m: PolymarketMarket) =>
+              sum + Number(m.volume24hr ?? 0),
+            0
+          );
 
-      let totalEvents = 0;
-      let totalMarkets = 0;
-      let filteredEvents = 0;
+          const totalVolume = Number((event as any).volume ?? 0);
+          const liquidity = Number((event as any).liquidity ?? 0);
 
-      for (const event of allEvents) {
-        // Skip events without markets
-        if (!event.markets || event.markets.length === 0) continue;
+          // Apply minimum thresholds to filter out micro-events
+          if (
+            eventVolume24hr < MIN_DAILY_VOLUME ||
+            totalVolume < MIN_TOTAL_VOLUME ||
+            liquidity < MIN_LIQUIDITY
+          ) {
+            filteredEvents++;
+            continue;
+          }
 
-        // Calculate total volume for the event
-        const eventVolume24hr = event.markets.reduce(
-          (sum: number, m: PolymarketMarket) => sum + Number(m.volume24hr ?? 0),
-          0
-        );
+          pageHadQualifyingEvents = true;
 
-        const totalVolume = Number((event as any).volume ?? 0);
-        const liquidity = Number((event as any).liquidity ?? 0);
+          const validMarkets = event.markets
+            .filter(
+              (m: PolymarketMarket) =>
+                m.conditionId && m.conditionId.length > 10
+            )
+            .map((m: PolymarketMarket) => ({
+              conditionId: m.conditionId,
+              eventId: event.id || event.slug,
+              question: m.question || 'Unknown',
+              active: m.active !== false,
+              closed: m.closed === true,
+              lastTradePrice: Number(m.lastTradePrice ?? 0),
+              bestBid: typeof m.bestBid === 'number' ? m.bestBid : undefined,
+              bestAsk: typeof m.bestAsk === 'number' ? m.bestAsk : undefined,
+              volume24hr: Number(m.volume24hr ?? 0),
+            }));
 
-        // Apply minimum thresholds to filter out micro-events
-        if (
-          eventVolume24hr < MIN_DAILY_VOLUME ||
-          totalVolume < MIN_TOTAL_VOLUME ||
-          liquidity < MIN_LIQUIDITY
-        ) {
-          filteredEvents++;
-          continue;
-        }
+          // Only store event if it has valid markets
+          if (validMarkets.length > 0) {
+            try {
+              // Store event first
+              await ctx.runMutation(internal.events.upsertEvent, {
+                event: {
+                  eventId: event.id || event.slug,
+                  slug: event.slug,
+                  title: event.title || 'Unknown Event',
+                  description: event.description,
+                  category: event.category,
+                  image: event.image || event.icon,
+                  active: event.active !== false,
+                  closed: event.closed === true,
+                  liquidity: liquidity,
+                  volume: totalVolume,
+                  volume24hr: eventVolume24hr,
+                },
+              });
+              totalEvents++;
 
-        // HIGH PRIORITY FIX: Better atomicity - prepare data first, then store together
-        const validMarkets = event.markets
-          .filter(
-            (m: PolymarketMarket) => m.conditionId && m.conditionId.length > 10
-          )
-          .map((m: PolymarketMarket) => ({
-            conditionId: m.conditionId,
-            eventId: event.id || event.slug,
-            question: m.question || 'Unknown',
-            active: m.active !== false,
-            closed: m.closed === true,
-            lastTradePrice: Number(m.lastTradePrice ?? 0),
-            bestBid: typeof m.bestBid === 'number' ? m.bestBid : undefined,
-            bestAsk: typeof m.bestAsk === 'number' ? m.bestAsk : undefined,
-            volume24hr: Number(m.volume24hr ?? 0),
-          }));
-
-        // Only store event if it has valid markets
-        if (validMarkets.length > 0) {
-          try {
-            // Store event first
-            await ctx.runMutation(internal.events.upsertEvent, {
-              event: {
-                eventId: event.id || event.slug,
-                slug: event.slug,
-                title: event.title || 'Unknown Event',
-                description: event.description,
-                category: event.category,
-                image: event.image || event.icon,
-                active: event.active !== false,
-                closed: event.closed === true,
-                liquidity: liquidity,
-                volume: totalVolume,
-                volume24hr: eventVolume24hr,
-              },
-            });
-            totalEvents++;
-
-            // Then store markets - if this fails, at least event exists
-            await ctx.runMutation(internal.markets.upsertMarkets, {
-              markets: validMarkets,
-            });
-            totalMarkets += validMarkets.length;
-          } catch (error) {
-            console.error(
-              `Failed to store event ${event.id} with markets:`,
-              error
-            );
-            // Continue with next event instead of failing entire sync
+              // Then store markets
+              await ctx.runMutation(internal.markets.upsertMarkets, {
+                markets: validMarkets,
+              });
+              totalMarkets += validMarkets.length;
+            } catch (error) {
+              console.error(
+                `Failed to store event ${event.id} with markets:`,
+                error
+              );
+            }
           }
         }
+
+        // Since results are sorted descending by volume, once an entire page has no qualifying events,
+        // all subsequent pages will have even lower volume.
+        if (!pageHadQualifyingEvents && totalEvents > 0) {
+          console.log(
+            `Volume threshold reached at page ${pageIdx + 1}; ending pagination.`
+          );
+          break;
+        }
+
+        if (!data.pagination?.hasMore) break;
+        offset += limit;
       }
 
       console.log(
