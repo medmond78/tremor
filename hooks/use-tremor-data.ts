@@ -84,27 +84,17 @@ export function useTremorData(window: '5m' | '60m' | '1440m' = '60m') {
           change: priceChangePercent,
           timestamp: new Date(tremor.timestampMs),
           totalVolume: tremor.totalVolume || tremor.event?.volume || 0,
-          url: (() => {
-            const isRestricted = Boolean(
-              tremor.restricted ?? tremor.event?.restricted
-            );
-            const slug = tremor.event?.slug;
-            if (!slug) return '#';
-            return isRestricted
-              ? `https://polymarket.com/event/${slug}`
-              : `https://polymarket.us/event/${slug}`;
-          })(),
-          usUrl:
-            tremor.event?.slug &&
-            !Boolean(tremor.restricted ?? tremor.event?.restricted)
-              ? `https://polymarket.us/event/${tremor.event.slug}`
-              : undefined,
+          url: tremor.event?.slug
+            ? `https://polymarket.com/event/${tremor.event.slug}`
+            : '#',
+          usUrl: undefined,
           globalUrl: tremor.event?.slug
             ? `https://polymarket.com/event/${tremor.event.slug}`
             : undefined,
           image: tremor.event?.image,
           seismoScore: tremor.seismoScore,
-          restricted: Boolean(tremor.restricted ?? tremor.event?.restricted),
+          restricted:
+            tremor.restricted !== false && tremor.event?.restricted !== false,
           marketMovements: marketMoves,
           multiMarketStats:
             marketMoves.length > 1

@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { internalMutation, query } from './_generated/server';
+import { internalMutation, mutation, query } from './_generated/server';
 
 // Upsert event
 export const upsertEvent = internalMutation({
@@ -37,6 +37,25 @@ export const upsertEvent = internalMutation({
     }
 
     return { upserted: 1 };
+  },
+});
+
+// Backfill missing restricted flags on existing events
+export const backfillRestricted = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const unpopulated = await ctx.db
+      .query('events')
+      .filter((q) => q.eq(q.field('restricted'), undefined))
+      .take(500);
+
+    let updated = 0;
+    for (const event of unpopulated) {
+      await ctx.db.patch(event._id, { restricted: true });
+      updated++;
+    }
+
+    return { updated };
   },
 });
 

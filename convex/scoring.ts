@@ -274,7 +274,7 @@ export const getTopTremors = query({
         marketMovements,
         totalVolume: score.totalVolume,
         activeMarkets: score.activeMarkets,
-        restricted: score.restricted ?? event?.restricted ?? false,
+        restricted: score.restricted ?? event?.restricted ?? true,
       });
     }
 

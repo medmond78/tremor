@@ -155,22 +155,23 @@ export const TremorCard = memo(function TremorCard({
         </div>
       </div>
 
-      {/* Open market link (available only if market is accessible in US) */}
-      {!isRestricted &&
-        (movement.usUrl || movement.url) &&
-        (movement.usUrl || movement.url) !== '#' && (
-          <a
-            href={movement.usUrl || movement.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            aria-label={`Trade ${movement.title} on Polymarket US`}
-            title="Opens on Polymarket US"
-            className="inline-flex min-h-[44px] flex-none items-center justify-end px-2 text-[13px] font-semibold text-sky-deep no-underline transition-colors hover:text-ink sm:self-center"
-          >
-            Open market (US)
-          </a>
-        )}
+      {/* Open market link to Polymarket */}
+      {movement.url && movement.url !== '#' && (
+        <a
+          href={movement.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          aria-label={
+            isRestricted
+              ? `View ${movement.title} on Polymarket`
+              : `Trade ${movement.title} on Polymarket`
+          }
+          className="inline-flex min-h-[44px] flex-none items-center justify-end px-2 text-[13px] font-semibold text-sky-deep no-underline transition-colors hover:text-ink sm:self-center"
+        >
+          {isRestricted ? 'View on Polymarket' : 'Open market'}
+        </a>
+      )}
     </article>
   );
 });

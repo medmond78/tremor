@@ -263,7 +263,7 @@ export function Sidebar({
               </span>
               <span className="text-[13px] leading-[18px] text-muted">
                 {usOnly
-                  ? `Smart routing to Polymarket US${restrictedCount !== undefined ? ` (${restrictedCount} hidden)` : ''}`
+                  ? `Hiding non-US restricted bets${restrictedCount !== undefined ? ` (${restrictedCount} hidden)` : ''}`
                   : `Showing all markets${restrictedCount !== undefined ? ` (${restrictedCount} non-US)` : ''}`}
               </span>
             </span>
@@ -275,21 +275,12 @@ export function Sidebar({
       <p className="m-0 text-[13px] leading-[18px] text-muted">
         Market data from{' '}
         <a
-          href="https://polymarket.us"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sky-deep transition-colors hover:text-ink"
-        >
-          Polymarket US
-        </a>{' '}
-        &amp;{' '}
-        <a
           href="https://polymarket.com"
           target="_blank"
           rel="noopener noreferrer"
           className="text-sky-deep transition-colors hover:text-ink"
         >
-          Global
+          Polymarket
         </a>
         . AI analysis via{' '}
         <a
