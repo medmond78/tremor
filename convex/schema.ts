@@ -16,6 +16,7 @@ export default defineSchema({
     volume: v.optional(v.float64()),
     volume24hr: v.float64(),
     volumeUsd24hr: v.optional(v.float64()), // USD volume for better sorting
+    restricted: v.optional(v.boolean()), // Regional/US trading restriction
     updatedAt: v.number(),
     lastScoreMs: v.optional(v.number()), // Track when last scored
   })
@@ -71,16 +72,21 @@ export default defineSchema({
     topMarketPrevPrice01: v.optional(v.float64()),
     topMarketCurrPrice01: v.optional(v.float64()),
     // Store full market movements array
-    marketMovements: v.optional(v.array(v.object({
-      conditionId: v.string(),
-      question: v.string(),
-      prevPrice: v.float64(),
-      currPrice: v.float64(),
-      change: v.float64(),
-      volume: v.float64(),
-    }))),
+    marketMovements: v.optional(
+      v.array(
+        v.object({
+          conditionId: v.string(),
+          question: v.string(),
+          prevPrice: v.float64(),
+          currPrice: v.float64(),
+          change: v.float64(),
+          volume: v.float64(),
+        })
+      )
+    ),
     totalVolume: v.optional(v.float64()),
     activeMarkets: v.optional(v.number()),
+    restricted: v.optional(v.boolean()),
   })
     .index('by_event_window', ['eventId', 'window'])
     .index('by_window_score', ['window', 'seismoScore', 'updatedAt']),

@@ -182,6 +182,15 @@ export function TremorDetailPanel({
                         <span className="text-ink">{movement.category}</span>
                       </div>
                     )}
+                    {movement?.restricted ? (
+                      <span className="rounded-sm border border-line bg-paper px-2 py-0.5 font-mono text-xs font-medium text-muted">
+                        Global only
+                      </span>
+                    ) : (
+                      <span className="bg-sky-tint rounded-sm border border-sky-deep/20 px-2 py-0.5 font-mono text-xs font-medium text-sky-deep">
+                        US Accessible
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -429,11 +438,36 @@ export function TremorDetailPanel({
             </div>
 
             {/* Clean footer */}
-            <div className="flex items-center justify-between border-t border-line bg-paper px-6 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-paper px-6 py-3">
               <div className="font-mono text-xs text-muted md:text-sm">
                 {movement.marketMovements && movement.marketMovements.length > 1
                   ? `${movement.marketMovements.length} markets affected`
                   : 'Press ESC to close'}
+              </div>
+              <div>
+                {!movement.restricted &&
+                (movement.usUrl || movement.url) &&
+                (movement.usUrl || movement.url) !== '#' ? (
+                  <a
+                    href={movement.usUrl || movement.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-[36px] items-center gap-1.5 rounded-sm bg-sky-deep px-3.5 py-1.5 text-xs font-semibold text-surface transition-colors hover:bg-ink"
+                  >
+                    <span>Trade on Polymarket US</span>
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                ) : movement.globalUrl ? (
+                  <a
+                    href={movement.globalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-[36px] items-center gap-1.5 rounded-sm border border-line bg-surface px-3.5 py-1.5 text-xs font-semibold text-muted transition-colors hover:border-ink hover:text-ink"
+                  >
+                    <span>Polymarket Global (VPN)</span>
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                ) : null}
               </div>
             </div>
           </div>

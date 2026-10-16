@@ -274,6 +274,7 @@ export const getTopTremors = query({
         marketMovements,
         totalVolume: score.totalVolume,
         activeMarkets: score.activeMarkets,
+        restricted: score.restricted ?? event?.restricted ?? false,
       });
     }
 
@@ -306,6 +307,7 @@ export const upsertScoreLite = internalMutation({
     ),
     totalVolume: v.optional(v.float64()),
     activeMarkets: v.optional(v.number()),
+    restricted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -328,6 +330,7 @@ export const upsertScoreLite = internalMutation({
       marketMovements: args.marketMovements,
       totalVolume: args.totalVolume,
       activeMarkets: args.activeMarkets,
+      restricted: args.restricted,
     };
 
     if (existing) {
@@ -373,6 +376,7 @@ export const updateScoresLite = internalAction({
                 marketMovements: scoreData.marketMovements,
                 totalVolume: scoreData.totalVolume,
                 activeMarkets: scoreData.activeMarkets,
+                restricted: event.restricted,
               });
             }
           }

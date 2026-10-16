@@ -22,8 +22,11 @@ export interface MarketMovement {
   volume?: number;
   totalVolume?: number; // Total volume across all markets
   url?: string;
+  usUrl?: string; // Polymarket US URL (https://polymarket.us/event/slug)
+  globalUrl?: string; // Polymarket Global URL (https://polymarket.com/event/slug)
   image?: string; // Event image URL
   seismoScore?: number; // 0-10 normalized score
+  restricted?: boolean; // True if regionally restricted (e.g. non-US)
   // Individual market movements within this event
   marketMovements?: Array<{
     conditionId: string;

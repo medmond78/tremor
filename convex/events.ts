@@ -1,5 +1,5 @@
-import { v } from "convex/values";
-import { internalMutation, query } from "./_generated/server";
+import { v } from 'convex/values';
+import { internalMutation, query } from './_generated/server';
 
 // Upsert event
 export const upsertEvent = internalMutation({
@@ -16,25 +16,26 @@ export const upsertEvent = internalMutation({
       liquidity: v.optional(v.float64()),
       volume: v.optional(v.float64()),
       volume24hr: v.float64(),
+      restricted: v.optional(v.boolean()),
     }),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
-      .query("events")
-      .withIndex("by_event", (q) => q.eq("eventId", args.event.eventId))
+      .query('events')
+      .withIndex('by_event', (q) => q.eq('eventId', args.event.eventId))
       .first();
-    
+
     const eventData = {
       ...args.event,
       updatedAt: Date.now(),
     };
-    
+
     if (existing) {
       await ctx.db.patch(existing._id, eventData);
     } else {
-      await ctx.db.insert("events", eventData);
+      await ctx.db.insert('events', eventData);
     }
-    
+
     return { upserted: 1 };
   },
 });
@@ -46,13 +47,13 @@ export const getActiveEvents = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 100;
-    
+
     const events = await ctx.db
-      .query("events")
-      .withIndex("by_active_volume", (q) => q.eq("active", true))
-      .order("desc")
+      .query('events')
+      .withIndex('by_active_volume', (q) => q.eq('active', true))
+      .order('desc')
       .take(limit);
-    
+
     return events;
   },
 });
@@ -65,40 +66,42 @@ export const getEventsToSync = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 10;
-    
+
     // Get events sorted by volume
     const events = await ctx.db
-      .query("events")
-      .withIndex("by_active_volume", (q) => q.eq("active", true))
-      .order("desc")
+      .query('events')
+      .withIndex('by_active_volume', (q) => q.eq('active', true))
+      .order('desc')
       .take(limit);
-    
+
     // Get their markets and sync states
     const results = await Promise.all(
       events.map(async (event) => {
         const markets = await ctx.db
-          .query("markets")
-          .withIndex("by_event", (q) => q.eq("eventId", event.eventId))
+          .query('markets')
+          .withIndex('by_event', (q) => q.eq('eventId', event.eventId))
           .collect();
-        
+
         // Get sync state for each market
         const marketStates = await Promise.all(
           markets.map(async (market) => {
             const state = await ctx.db
-              .query("marketSyncState")
-              .withIndex("by_condition", (q) => q.eq("conditionId", market.conditionId))
+              .query('marketSyncState')
+              .withIndex('by_condition', (q) =>
+                q.eq('conditionId', market.conditionId)
+              )
               .first();
-            
+
             return {
               market,
               lastSync: state?.lastTradeFetchMs || 0,
             };
           })
         );
-        
+
         // Return event with its least recently synced market
-        const oldestSync = Math.min(...marketStates.map(s => s.lastSync));
-        
+        const oldestSync = Math.min(...marketStates.map((s) => s.lastSync));
+
         return {
           event,
           markets: marketStates,
@@ -106,7 +109,7 @@ export const getEventsToSync = query({
         };
       })
     );
-    
+
     // Sort by oldest sync time and filter by priority
     return results
       .sort((a, b) => a.oldestSyncMs - b.oldestSyncMs)

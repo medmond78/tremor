@@ -21,6 +21,7 @@ export const TremorCard = memo(function TremorCard({
 
   const isSettling = to <= 1 || to >= 99;
   const crossed50 = from < 50 !== to < 50;
+  const isRestricted = Boolean(movement.restricted);
 
   const numScore = movement.seismoScore ?? 0;
   const score = numScore.toFixed(1);
@@ -138,6 +139,12 @@ export const TremorCard = memo(function TremorCard({
             </span>
           )}
 
+          {isRestricted && (
+            <span className="rounded-sm border border-line bg-paper px-2 py-0.5 font-mono text-xs font-medium text-muted">
+              Global only
+            </span>
+          )}
+
           <span className="ml-auto hidden font-mono text-xs font-medium text-muted sm:inline">
             {meta}
           </span>
@@ -148,18 +155,22 @@ export const TremorCard = memo(function TremorCard({
         </div>
       </div>
 
-      {/* Open market link */}
-      {movement.url && movement.url !== '#' && (
-        <a
-          href={movement.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="inline-flex min-h-[44px] flex-none items-center justify-end px-2 text-[13px] font-semibold text-sky-deep no-underline transition-colors hover:text-ink sm:self-center"
-        >
-          Open market
-        </a>
-      )}
+      {/* Open market link (available only if market is accessible in US) */}
+      {!isRestricted &&
+        (movement.usUrl || movement.url) &&
+        (movement.usUrl || movement.url) !== '#' && (
+          <a
+            href={movement.usUrl || movement.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Trade ${movement.title} on Polymarket US`}
+            title="Opens on Polymarket US"
+            className="inline-flex min-h-[44px] flex-none items-center justify-end px-2 text-[13px] font-semibold text-sky-deep no-underline transition-colors hover:text-ink sm:self-center"
+          >
+            Open market (US)
+          </a>
+        )}
     </article>
   );
 });

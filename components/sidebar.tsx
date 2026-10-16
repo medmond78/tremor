@@ -14,6 +14,9 @@ interface SidebarProps {
   hideSettling?: boolean;
   onToggleSettling?: () => void;
   settlingCount?: number;
+  usOnly?: boolean;
+  onToggleUsOnly?: () => void;
+  restrictedCount?: number;
 }
 
 export function Sidebar({
@@ -26,6 +29,9 @@ export function Sidebar({
   hideSettling = true,
   onToggleSettling,
   settlingCount,
+  usOnly = true,
+  onToggleUsOnly,
+  restrictedCount,
 }: SidebarProps) {
   const intensityFilters = [
     {
@@ -234,16 +240,56 @@ export function Sidebar({
         </section>
       )}
 
+      {/* US Accessible Only Toggle */}
+      {onToggleUsOnly && (
+        <section className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={onToggleUsOnly}
+            aria-pressed={usOnly}
+            className="flex min-h-[52px] items-center gap-3 rounded-md border-2 border-surface bg-surface px-4 py-2 text-left shadow-sm transition-colors hover:border-line"
+          >
+            <span
+              aria-hidden="true"
+              className={`flex h-6 w-10 flex-none items-center rounded-full p-[3px] transition-colors ${
+                usOnly ? 'justify-end bg-sky-deep' : 'justify-start bg-line'
+              }`}
+            >
+              <span className="h-[18px] w-[18px] rounded-full bg-surface shadow" />
+            </span>
+            <span className="flex flex-1 flex-col">
+              <span className="text-base font-semibold leading-5 text-ink">
+                US accessible only
+              </span>
+              <span className="text-[13px] leading-[18px] text-muted">
+                {usOnly
+                  ? `Smart routing to Polymarket US${restrictedCount !== undefined ? ` (${restrictedCount} hidden)` : ''}`
+                  : `Showing all markets${restrictedCount !== undefined ? ` (${restrictedCount} non-US)` : ''}`}
+              </span>
+            </span>
+          </button>
+        </section>
+      )}
+
       {/* Attribution */}
       <p className="m-0 text-[13px] leading-[18px] text-muted">
         Market data from{' '}
+        <a
+          href="https://polymarket.us"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sky-deep transition-colors hover:text-ink"
+        >
+          Polymarket US
+        </a>{' '}
+        &amp;{' '}
         <a
           href="https://polymarket.com"
           target="_blank"
           rel="noopener noreferrer"
           className="text-sky-deep transition-colors hover:text-ink"
         >
-          Polymarket
+          Global
         </a>
         . Social read from{' '}
         <a

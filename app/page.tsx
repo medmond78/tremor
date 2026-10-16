@@ -18,6 +18,7 @@ export default function Home() {
     'all' | 'whale' | 'high' | 'medium' | 'low'
   >('all');
   const [hideSettling, setHideSettling] = useState(true);
+  const [usOnly, setUsOnly] = useState(false);
   const [selectedMovement, setSelectedMovement] =
     useState<MarketMovement | null>(null);
   const [isChangingWindow, setIsChangingWindow] = useState(false);
@@ -58,7 +59,12 @@ export default function Home() {
     }).length;
   }, [movements]);
 
-  // Filter movements based on intensity, volume, and settling toggle
+  // Count how many movements in current window are restricted in the US
+  const restrictedCount = useMemo(() => {
+    return movements.filter((m) => Boolean(m.restricted)).length;
+  }, [movements]);
+
+  // Filter movements based on intensity, volume, settling toggle, and US accessibility
   const filteredMovements = useMemo(() => {
     return movements.filter((m) => {
       const currVal = m.currentValue ?? 0;
@@ -66,6 +72,11 @@ export default function Home() {
 
       // Settling filter: hide if toggle is ON
       if (hideSettling && isSettling) {
+        return false;
+      }
+
+      // US accessible only filter
+      if (usOnly && m.restricted) {
         return false;
       }
 
@@ -93,7 +104,7 @@ export default function Home() {
 
       return true;
     });
-  }, [movements, hideSettling, intensityFilter, volumeFilter]);
+  }, [movements, hideSettling, usOnly, intensityFilter, volumeFilter]);
 
   const n = filteredMovements.length;
   const countLabel = `${n} ${n === 1 ? 'tremor' : 'tremors'} · ${windowLabel.toLowerCase()}`;
@@ -101,7 +112,9 @@ export default function Home() {
   const emptyText =
     hideSettling && settlingCount > 0 && filteredMovements.length === 0
       ? `Every top move in the ${windowLabel.toLowerCase()} is a market settling at 0 or 100%. Turn off "Hide settling markets" to see them.`
-      : 'Nothing matches these filters. Try a wider window or lower intensity.';
+      : usOnly && restrictedCount > 0 && filteredMovements.length === 0
+        ? `All top moves in the ${windowLabel.toLowerCase()} are currently non-US restricted bets. Turn off "US accessible only" to see all market activity.`
+        : 'Nothing matches these filters. Try a wider window or lower intensity.';
 
   return (
     <div className="min-h-screen bg-paper font-sans text-ink">
@@ -119,6 +132,9 @@ export default function Home() {
           hideSettling={hideSettling}
           onToggleSettling={() => setHideSettling((prev) => !prev)}
           settlingCount={settlingCount}
+          usOnly={usOnly}
+          onToggleUsOnly={() => setUsOnly((prev) => !prev)}
+          restrictedCount={restrictedCount}
         />
 
         {/* Main Feed */}

@@ -137,6 +137,9 @@ export const syncEvents = internalAction({
                   liquidity: liquidity,
                   volume: totalVolume,
                   volume24hr: eventVolume24hr,
+                  restricted:
+                    (event as any).restricted === true ||
+                    event.markets.some((m: any) => m.restricted === true),
                 },
               });
               totalEvents++;
