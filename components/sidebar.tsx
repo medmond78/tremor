@@ -17,6 +17,8 @@ interface SidebarProps {
   usOnly?: boolean;
   onToggleUsOnly?: () => void;
   restrictedCount?: number;
+  density?: 'cards' | 'terminal';
+  onChangeDensity?: (d: 'cards' | 'terminal') => void;
 }
 
 export function Sidebar({
@@ -32,6 +34,8 @@ export function Sidebar({
   usOnly = true,
   onToggleUsOnly,
   restrictedCount,
+  density = 'cards',
+  onChangeDensity,
 }: SidebarProps) {
   const intensityFilters = [
     {
@@ -237,6 +241,44 @@ export function Sidebar({
               </span>
             </span>
           </button>
+        </section>
+      )}
+
+      {/* Display Mode (Cards vs Pro Terminal) */}
+      {onChangeDensity && (
+        <section className="flex flex-col gap-2">
+          <div className="font-mono text-xs font-semibold uppercase tracking-wider text-muted">
+            Display Mode
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onChangeDensity('cards')}
+              aria-pressed={density === 'cards'}
+              className={`flex items-center justify-center gap-1.5 rounded-md border py-2.5 text-xs font-semibold transition-all ${
+                density === 'cards'
+                  ? 'shadow-xs border-ink bg-ink text-surface'
+                  : 'border-line bg-surface text-ink hover:border-ink/50'
+              }`}
+            >
+              <span>Cards</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeDensity('terminal')}
+              aria-pressed={density === 'terminal'}
+              className={`flex items-center justify-center gap-1.5 rounded-md border py-2.5 text-xs font-semibold transition-all ${
+                density === 'terminal'
+                  ? 'shadow-xs border-ink bg-ink text-surface'
+                  : 'border-line bg-surface text-ink hover:border-ink/50'
+              }`}
+            >
+              <span className="rounded bg-sky-deep px-1 py-0.5 font-mono text-[9px] font-bold uppercase text-white">
+                PRO
+              </span>
+              <span>Terminal</span>
+            </button>
+          </div>
         </section>
       )}
 

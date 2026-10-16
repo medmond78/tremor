@@ -43,3 +43,8 @@ next-env.d.ts
 
 # internal tools
 sync-repos.sh
+
+# convex local
+convex_local_backend.sqlite3*
+convex_local_storage/
+

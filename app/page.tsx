@@ -130,7 +130,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-paper font-sans text-ink">
-      <Header windowLabel={windowLabel} />
+      <Header
+        windowLabel={windowLabel}
+        density={density}
+        onChangeDensity={setDensity}
+      />
 
       <div className="mx-auto flex max-w-[1376px] flex-col gap-8 p-4 sm:p-6 md:p-8 lg:flex-row">
         {/* Sidebar - Stacks above the feed on narrow screens, left rail on desktop */}
@@ -147,6 +151,8 @@ export default function Home() {
           usOnly={usOnly}
           onToggleUsOnly={() => setUsOnly((prev) => !prev)}
           restrictedCount={restrictedCount}
+          density={density}
+          onChangeDensity={setDensity}
         />
 
         {/* Main Feed */}
@@ -217,6 +223,9 @@ export default function Home() {
                       d="M4 6h16M4 10h16M4 14h16M4 18h16"
                     />
                   </svg>
+                  <span className="rounded bg-sky-deep px-1 py-0.5 font-mono text-[9px] font-bold uppercase text-white">
+                    PRO
+                  </span>
                   <span>Terminal</span>
                 </button>
               </div>

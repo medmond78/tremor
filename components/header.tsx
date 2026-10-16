@@ -6,10 +6,14 @@ import { BRAND } from '@/config/brand.config';
 
 interface HeaderProps {
   windowLabel?: string;
+  density?: 'cards' | 'terminal';
+  onChangeDensity?: (d: 'cards' | 'terminal') => void;
 }
 
 export const Header = memo(function Header({
   windowLabel = 'Last 24 hours',
+  density = 'cards',
+  onChangeDensity,
 }: HeaderProps) {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -36,6 +40,33 @@ export const Header = memo(function Header({
             />
             <span>Live · {windowLabel}</span>
           </div>
+
+          {onChangeDensity && (
+            <button
+              type="button"
+              onClick={() =>
+                onChangeDensity(density === 'terminal' ? 'cards' : 'terminal')
+              }
+              aria-pressed={density === 'terminal'}
+              className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition-all ${
+                density === 'terminal'
+                  ? 'shadow-xs border-ink bg-ink text-surface'
+                  : 'border-line bg-surface text-ink hover:border-ink/50'
+              }`}
+              title={
+                density === 'terminal'
+                  ? 'Switch to Standard Cards View'
+                  : 'Switch to Pro Terminal View'
+              }
+            >
+              <span className="rounded bg-sky-deep px-1 py-0.5 font-mono text-[9px] font-bold uppercase text-white">
+                PRO
+              </span>
+              <span>
+                {density === 'terminal' ? 'Pro Terminal' : 'Pro Mode'}
+              </span>
+            </button>
+          )}
 
           <button
             type="button"
