@@ -8,17 +8,21 @@ import { TremorDetailPanel } from '@/components/tremor-detail-panel';
 import { useTremorData } from '@/hooks/use-tremor-data';
 import { MarketMovement } from '@/lib/types';
 import { useState, useEffect, useMemo } from 'react';
+import { useUserPreferences } from '@/hooks/use-user-preferences';
 
 export default function Home() {
-  const [windowSel, setWindowSel] = useState<'5m' | '60m' | '1440m'>('1440m'); // Default to 24h as in spec
-  const [intensityFilter, setIntensityFilter] = useState<
-    'all' | 'extreme' | 'high' | 'moderate' | 'low'
-  >('all');
-  const [volumeFilter, setVolumeFilter] = useState<
-    'all' | 'whale' | 'high' | 'medium' | 'low'
-  >('all');
-  const [hideSettling, setHideSettling] = useState(true);
-  const [usOnly, setUsOnly] = useState(false);
+  const {
+    preferences,
+    setWindowSel,
+    setIntensityFilter,
+    setVolumeFilter,
+    setHideSettling,
+    setUsOnly,
+  } = useUserPreferences();
+
+  const { windowSel, intensityFilter, volumeFilter, hideSettling, usOnly } =
+    preferences;
+
   const [selectedMovement, setSelectedMovement] =
     useState<MarketMovement | null>(null);
   const [isChangingWindow, setIsChangingWindow] = useState(false);
@@ -49,7 +53,7 @@ export default function Home() {
     '1440m': 'Last 24 hours',
   };
 
-  const windowLabel = windowLabelMap[windowSel];
+  const windowLabel = windowLabelMap[windowSel] || 'Last 24 hours';
 
   // Count how many movements in current window are settling
   const settlingCount = useMemo(() => {
