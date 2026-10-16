@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 export type TimeWindow = '5m' | '60m' | '1440m';
 export type IntensityFilter = 'all' | 'extreme' | 'high' | 'moderate' | 'low';
 export type VolumeFilter = 'all' | 'whale' | 'high' | 'medium' | 'low';
+export type ViewDensity = 'cards' | 'terminal';
 
 export interface UserPreferences {
   windowSel: TimeWindow;
@@ -12,6 +13,7 @@ export interface UserPreferences {
   volumeFilter: VolumeFilter;
   hideSettling: boolean;
   usOnly: boolean;
+  density: ViewDensity;
 }
 
 import { BRAND } from '@/config/brand.config';
@@ -57,6 +59,7 @@ function getInitialState(): UserPreferences {
     volumeFilter: 'all',
     hideSettling: true,
     usOnly: true,
+    density: 'cards',
   };
 }
 
@@ -80,6 +83,7 @@ export function useUserPreferences() {
       const urlVolume = params.get('volume') as VolumeFilter | null;
       const urlHideSettling = params.get('hideSettling');
       const urlUsOnly = params.get('usOnly') ?? params.get('us');
+      const urlDensity = params.get('density') as ViewDensity | null;
 
       // Determine initial US mode:
       // 1. Explicit URL parameter (?usOnly=1 or ?usOnly=true)
@@ -139,12 +143,20 @@ export function useUserPreferences() {
             ? stored.hideSettling
             : true;
 
+      const resolvedDensity: ViewDensity =
+        urlDensity === 'terminal' || urlDensity === 'cards'
+          ? urlDensity
+          : stored?.density === 'terminal'
+            ? 'terminal'
+            : 'cards';
+
       setPreferences({
         windowSel: resolvedWindow,
         intensityFilter: resolvedIntensity,
         volumeFilter: resolvedVolume,
         hideSettling: resolvedHideSettling,
         usOnly: resolvedUsOnly,
+        density: resolvedDensity,
       });
     } catch (e) {
       console.warn('Failed to hydrate user preferences', e);
@@ -207,6 +219,10 @@ export function useUserPreferences() {
     []
   );
 
+  const setDensity = useCallback((density: ViewDensity) => {
+    setPreferences((prev) => ({ ...prev, density }));
+  }, []);
+
   return {
     preferences,
     isHydrated,
@@ -215,5 +231,6 @@ export function useUserPreferences() {
     setVolumeFilter,
     setHideSettling,
     setUsOnly,
+    setDensity,
   };
 }

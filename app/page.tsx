@@ -3,6 +3,7 @@
 import { Header } from '@/components/header';
 import { Sidebar } from '@/components/sidebar';
 import { TremorCard } from '@/components/tremor-card';
+import { TerminalView } from '@/components/terminal-view';
 import { MarketSummary } from '@/components/market-summary';
 import { TremorDetailPanel } from '@/components/tremor-detail-panel';
 import { useTremorData } from '@/hooks/use-tremor-data';
@@ -18,10 +19,17 @@ export default function Home() {
     setVolumeFilter,
     setHideSettling,
     setUsOnly,
+    setDensity,
   } = useUserPreferences();
 
-  const { windowSel, intensityFilter, volumeFilter, hideSettling, usOnly } =
-    preferences;
+  const {
+    windowSel,
+    intensityFilter,
+    volumeFilter,
+    hideSettling,
+    usOnly,
+    density,
+  } = preferences;
 
   const [selectedMovement, setSelectedMovement] =
     useState<MarketMovement | null>(null);
@@ -146,14 +154,77 @@ export default function Home() {
           {/* Tremor Report */}
           <MarketSummary />
 
-          {/* Heading with tremor count and sort */}
-          <div className="flex flex-wrap items-baseline justify-between gap-4 px-1 pt-4">
+          {/* Heading with tremor count, density switcher, and sort */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-1 pt-4">
             <h1 className="m-0 text-2xl font-semibold leading-8 text-ink md:text-[28px] md:leading-[34px]">
               {countLabel}
             </h1>
-            <span className="font-mono text-xs font-medium uppercase leading-4 text-muted">
-              Sorted by intensity
-            </span>
+
+            <div className="flex items-center gap-2.5">
+              {/* Density Switcher */}
+              <div
+                role="group"
+                aria-label="View Density"
+                className="shadow-2xs flex items-center rounded-md border border-line bg-surface p-0.5"
+              >
+                <button
+                  type="button"
+                  onClick={() => setDensity('cards')}
+                  className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                    density === 'cards'
+                      ? 'shadow-2xs bg-ink font-semibold text-surface'
+                      : 'text-muted hover:text-ink'
+                  }`}
+                  aria-pressed={density === 'cards'}
+                  title="Card View"
+                >
+                  <svg
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                    />
+                  </svg>
+                  <span>Cards</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDensity('terminal')}
+                  className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                    density === 'terminal'
+                      ? 'shadow-2xs bg-ink font-semibold text-surface'
+                      : 'text-muted hover:text-ink'
+                  }`}
+                  aria-pressed={density === 'terminal'}
+                  title="High-Density Terminal Matrix"
+                >
+                  <svg
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                    />
+                  </svg>
+                  <span>Terminal</span>
+                </button>
+              </div>
+
+              <span className="hidden font-mono text-xs font-medium uppercase leading-4 text-muted sm:inline">
+                Sorted by intensity
+              </span>
+            </div>
           </div>
 
           {/* Feed Content */}
@@ -179,6 +250,16 @@ export default function Home() {
               </div>
               <div className="text-muted">{emptyText}</div>
             </div>
+          ) : density === 'terminal' ? (
+            <TerminalView
+              movements={filteredMovements}
+              selectedMovement={selectedMovement}
+              onSelectMovement={(move) => {
+                setSelectedMovement((prev) =>
+                  prev?.id === move.id ? null : move
+                );
+              }}
+            />
           ) : (
             <div className="flex flex-col gap-3">
               {filteredMovements.map((move) => (

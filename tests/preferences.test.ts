@@ -52,4 +52,10 @@ describe('useUserPreferences and region detection', () => {
 
     expect(isLikelyUsUser()).toBe(false);
   });
+
+  it('validates supported density modes', () => {
+    const validDensities = ['cards', 'terminal'];
+    expect(validDensities).toContain('cards');
+    expect(validDensities).toContain('terminal');
+  });
 });

@@ -2,6 +2,7 @@
 
 import { MarketMovement } from '@/lib/types';
 import { memo } from 'react';
+import { ProbabilitySparkline } from './probability-sparkline';
 
 interface TremorCardProps {
   movement: MarketMovement;
@@ -124,12 +125,14 @@ export const TremorCard = memo(function TremorCard({
         </div>
 
         {/* Probability shift & badges row */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 sm:pt-0">
-          <span className="font-mono text-sm font-medium leading-5 text-ink">
+        <div className="flex flex-wrap items-center gap-2.5 pt-1 sm:pt-0">
+          <span className="font-mono text-sm font-semibold leading-5 text-ink">
             {from}% → {to}%
           </span>
 
-          <span className="rounded-sm border border-line bg-paper px-2 py-0.5 font-mono text-xs font-medium text-ink">
+          <ProbabilitySparkline from={from} to={to} width={64} height={20} />
+
+          <span className="rounded-sm border border-line bg-paper px-2 py-0.5 font-mono text-xs font-semibold text-ink">
             {deltaLabel}
           </span>
 
