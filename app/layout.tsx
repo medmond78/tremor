@@ -16,40 +16,39 @@ const inter = Inter({
   weight: ['400', '500', '600', '700'],
 });
 
+import { BRAND } from '@/config/brand.config';
+
 export const metadata: Metadata = {
-  title: 'Tremor - Where Money Talks First',
-  description:
-    'Track sudden market movements before news breaks. Real-time prediction market monitoring 500+ events on Polymarket. When smart money moves, probabilities shift — fast.',
+  title: `${BRAND.name} - ${BRAND.tagline}`,
+  description: BRAND.description,
   keywords:
-    'prediction markets, polymarket, market movements, probability shifts, tremor, real-time tracking, breaking news, smart money, betting markets, event probabilities, live markets',
-  authors: [{ name: 'Tremor' }],
-  creator: 'Tremor',
-  publisher: 'Tremor',
+    'prediction markets, kalshi, polymarket, market movements, probability shifts, real-time tracking, breaking news, smart money, betting markets, event probabilities, live markets',
+  authors: [{ name: BRAND.author }],
+  creator: BRAND.name,
+  publisher: BRAND.legalEntity,
   openGraph: {
-    title: 'Tremor - Where Money Talks First',
-    description:
-      'Track sudden market movements before news breaks. Real-time prediction market tremors.',
-    url: 'https://tremor.live',
-    siteName: 'Tremor',
+    title: `${BRAND.name} - ${BRAND.tagline}`,
+    description: BRAND.description,
+    url: BRAND.domain,
+    siteName: BRAND.name,
     type: 'website',
     locale: 'en_US',
     images: [
       {
-        url: 'https://tremor.live/og-image.png',
+        url: `${BRAND.domain}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'TREMOR - Real-time seismic monitoring for prediction markets',
+        alt: `${BRAND.name} - ${BRAND.tagline}`,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Tremor - Where Money Talks First',
-    description:
-      'Track sudden market movements before news breaks. Real-time prediction market tremors.',
-    site: '@tremordotlive',
-    creator: '@tremordotlive',
-    images: ['https://tremor.live/og-image.png'],
+    title: `${BRAND.name} - ${BRAND.tagline}`,
+    description: BRAND.description,
+    site: BRAND.social.twitter || '@tremordotlive',
+    creator: BRAND.social.twitter || '@tremordotlive',
+    images: [`${BRAND.domain}/og-image.png`],
   },
   robots: {
     index: true,

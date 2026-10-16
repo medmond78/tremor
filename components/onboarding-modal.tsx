@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { BRAND } from '@/config/brand.config';
 
 interface OnboardingModalProps {
   isOpen?: boolean;
@@ -22,6 +23,7 @@ export function OnboardingModal({
 
   const handleClose = useCallback(() => {
     if (typeof window !== 'undefined') {
+      localStorage.setItem(BRAND.storageKeys.onboardingDismissed, 'true');
       localStorage.setItem('tremor-onboarding-seen', 'true');
     }
     setHasSeenOnboarding(true);
@@ -36,7 +38,8 @@ export function OnboardingModal({
   useEffect(() => {
     const seen =
       typeof window !== 'undefined' &&
-      Boolean(localStorage.getItem('tremor-onboarding-seen'));
+      (Boolean(localStorage.getItem(BRAND.storageKeys.onboardingDismissed)) ||
+        Boolean(localStorage.getItem('tremor-onboarding-seen')));
     setHasSeenOnboarding(seen);
     if (!autoShow) return;
     if (!seen) {

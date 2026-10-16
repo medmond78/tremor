@@ -14,7 +14,9 @@ export interface UserPreferences {
   usOnly: boolean;
 }
 
-const STORAGE_KEY = 'tremor_user_preferences_v1';
+import { BRAND } from '@/config/brand.config';
+
+const STORAGE_KEY = BRAND.storageKeys.userPreferences;
 
 export function isLikelyUsUser(): boolean {
   if (typeof Intl === 'undefined') return false;
