@@ -291,14 +291,23 @@ export function Sidebar({
         >
           Global
         </a>
-        . Social read from{' '}
+        . AI analysis via{' '}
         <a
-          href="https://x.ai"
+          href="https://ai.google.dev"
           target="_blank"
           rel="noopener noreferrer"
           className="text-sky-deep transition-colors hover:text-ink"
         >
-          Grok
+          Gemini
+        </a>{' '}
+        &amp;{' '}
+        <a
+          href="https://www.anthropic.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sky-deep transition-colors hover:text-ink"
+        >
+          Claude
         </a>
         .
       </p>

@@ -2,36 +2,7 @@ import { v } from 'convex/values';
 import { internalAction, internalQuery } from './_generated/server';
 import { internal } from './_generated/api';
 import { logger } from '../lib/logger';
-
-// xAI Grok API configuration
-const GROK_API_URL = 'https://api.x.ai/v1/chat/completions';
-const GROK_MODEL = process.env.XAI_MODEL || 'grok-2-latest';
-
-interface SearchParameters {
-  mode: 'auto' | 'on' | 'off';
-  sources?: Array<{
-    type: 'web' | 'x' | 'news';
-    excluded_websites?: string[];
-    included_x_handles?: string[];
-    post_favorite_count?: number;
-  }>;
-  from_date?: string;
-  to_date?: string;
-  max_search_results?: number;
-  return_citations?: boolean;
-}
-
-interface GrokResponse {
-  choices: Array<{
-    message: {
-      content: string;
-    };
-  }>;
-  usage?: {
-    num_sources_used?: number;
-  };
-  citations?: string[];
-}
+import { generateAIText, getActiveAIConfig } from './aiClient';
 
 // Internal query to check for cached analysis
 export const getCachedAnalysis = internalQuery({
@@ -53,7 +24,7 @@ export const getCachedAnalysis = internalQuery({
   },
 });
 
-// Internal action to generate AI analysis (can use fetch)
+// Internal action to generate AI analysis using Gemini or Claude
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const generateAnalysis: any = internalAction({
   args: {
@@ -67,10 +38,16 @@ export const generateAnalysis: any = internalAction({
     marketQuestion: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const apiKey = process.env.XAI_API_KEY;
-    if (!apiKey) {
-      logger.error('XAI_API_KEY not configured');
-      return { success: false, error: 'API key not configured' };
+    const config = getActiveAIConfig();
+    if (!config) {
+      logger.error(
+        'No AI provider configured (GEMINI_API_KEY or ANTHROPIC_API_KEY required)'
+      );
+      return {
+        success: false,
+        error:
+          'AI API key not configured (set GEMINI_API_KEY or ANTHROPIC_API_KEY)',
+      };
     }
 
     try {
@@ -88,13 +65,13 @@ export const generateAnalysis: any = internalAction({
       }
 
       logger.debug(
-        `Generating new AI analysis for movement ${args.movementId}`
+        `Generating AI analysis for ${args.movementId} using ${config.provider} (${config.model})`
       );
 
       // Extract key terms for better search targeting
       const titleKeywords = args.title
         .toLowerCase()
-        .replace(/\b(will|the|be|in|at|on|to|for|of|and|or)\b/gi, ' ') // Remove common words safely
+        .replace(/\b(will|the|be|in|at|on|to|for|of|and|or)\b/gi, ' ')
         .split(/\s+/)
         .filter((word) => word.length > 3)
         .slice(0, 3)
@@ -117,11 +94,6 @@ export const generateAnalysis: any = internalAction({
         
         Remember: Prediction markets move BEFORE news breaks. Smart money is betting on what WILL happen.
         
-        Search X/Twitter for:
-        1. Recent posts about "${titleKeywords}" from traders, analysts, or news sources
-        2. Early signals, rumors, or leaks that haven't hit mainstream media yet
-        3. What insiders or informed accounts are saying about upcoming announcements
-        
         Provide a clear 2-3 sentence explanation of what traders appear to be anticipating:
         - Focus on what smart money might know that others don't yet
         - Use language like "traders appear to be positioning for", "market is pricing in", "anticipating", "ahead of expected"
@@ -132,40 +104,25 @@ export const generateAnalysis: any = internalAction({
         Complete all sentences - do not cut off mid-thought.
       `;
 
-      const response = await makeGrokRequest(apiKey, analysisPrompt, {
-        mode: 'on', // Always search for early signals on X
-        sources: [
-          {
-            type: 'x',
-            post_favorite_count: 5, // Lower threshold to catch earliest signals
-          },
-        ],
-        from_date: getDateDaysAgo(3), // Last 3 days - wider window for developing stories
-        max_search_results: 25, // Maximum allowed by Grok API
-        return_citations: true,
+      const response = await generateAIText({
+        prompt: analysisPrompt,
+        temperature: 0.7,
+        maxTokens: 500,
       });
 
       // Check if we got a valid response
       if (!response.content || response.content.trim() === '') {
-        logger.error('Empty response from Grok API');
+        logger.error(`Empty response from ${config.provider} API`);
         throw new Error('AI service returned empty response');
       }
 
-      // Calculate confidence based on single response
       const sourcesUsed = response.sourcesUsed || 0;
-
       const baseConfidence = Math.min(
         95,
-        Math.max(
-          40,
-          args.seismoScore * 8 + Math.min(30, sourcesUsed * 3) // More weight per source since fewer total
-        )
+        Math.max(40, args.seismoScore * 8 + Math.min(30, sourcesUsed * 3))
       );
 
-      // Collect all citations from X/Twitter
-      const allCitations = (response.citations || []).filter(
-        (url) => url.includes('x.com') || url.includes('twitter.com')
-      );
+      const allCitations = response.citations || [];
 
       // Store the analysis in the database
       const now = Date.now();
@@ -190,6 +147,8 @@ export const generateAnalysis: any = internalAction({
           sources: allCitations,
           confidence: Math.round(baseConfidence),
           isValid: true,
+          provider: response.provider,
+          model: response.model,
         },
       };
     } catch (error) {
@@ -201,67 +160,3 @@ export const generateAnalysis: any = internalAction({
     }
   },
 });
-
-// Helper function to make Grok API requests
-async function makeGrokRequest(
-  apiKey: string,
-  prompt: string,
-  searchParams?: SearchParameters
-): Promise<{
-  content: string;
-  citations?: string[];
-  sourcesUsed?: number;
-}> {
-  const requestBody: Record<string, unknown> = {
-    model: GROK_MODEL,
-    messages: [
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
-    temperature: 0.7,
-    max_tokens: 500, // 2-3 sentence explanation
-  };
-
-  if (searchParams) {
-    requestBody.search_parameters = searchParams;
-  }
-
-  const response = await fetch(GROK_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Grok API error: ${response.status} - ${errorText}`);
-  }
-
-  const data: GrokResponse = await response.json();
-
-  // Debug logging
-  logger.debug('Grok API response:', JSON.stringify(data, null, 2));
-
-  const content = data.choices?.[0]?.message?.content || '';
-  if (!content) {
-    logger.error('No content in Grok response:', data);
-  }
-
-  return {
-    content,
-    citations: data.citations,
-    sourcesUsed: data.usage?.num_sources_used,
-  };
-}
-
-// Helper to get ISO date string for N days ago
-function getDateDaysAgo(days: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() - days);
-  return date.toISOString().split('T')[0];
-}

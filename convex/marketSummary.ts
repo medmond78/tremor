@@ -8,6 +8,7 @@ import {
 } from './_generated/server';
 import { api, internal } from './_generated/api';
 import { logger } from '../lib/logger';
+import { generateAIText, getActiveAIConfig } from './aiClient';
 
 export type MarketSummaryResult = {
   success: boolean;
@@ -53,14 +54,18 @@ export const getSummary = query({
 async function executeGenerateSummary(
   ctx: ActionCtx
 ): Promise<MarketSummaryResult> {
-  const apiKey = process.env.XAI_API_KEY;
-  if (!apiKey) {
-    logger.error('XAI_API_KEY not configured for market summary');
-    return { success: false, error: 'API key not configured' };
+  const config = getActiveAIConfig();
+  if (!config) {
+    logger.error(
+      'No AI provider configured for market summary (set GEMINI_API_KEY or ANTHROPIC_API_KEY)'
+    );
+    return { success: false, error: 'AI API key not configured' };
   }
 
   try {
-    logger.info('Generating market summary...');
+    logger.info(
+      `Generating market summary using ${config.provider} (${config.model})...`
+    );
 
     // Get recent high-impact movements (last 24 hours)
     const recentMovements = await ctx.runQuery(
@@ -87,35 +92,13 @@ ${movementsContext}
 
 Summary:`;
 
-    // Make API call to Grok
-    const model = process.env.XAI_MODEL || 'grok-2-latest';
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 500,
-      }),
+    const result = await generateAIText({
+      prompt,
+      temperature: 0.7,
+      maxTokens: 500,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Grok API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-
-    const summary = data.choices?.[0]?.message?.content || '';
+    const summary = result.content;
 
     if (!summary || summary.trim() === '') {
       logger.error('Empty summary content');
