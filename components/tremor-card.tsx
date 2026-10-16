@@ -14,54 +14,46 @@ export const TremorCard = memo(function TremorCard({
   isSelected = false,
   onClick,
 }: TremorCardProps) {
-  const formatTime = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    if (minutes < 1) return 'NOW';
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h`;
-    return `${Math.floor(hours / 24)}d`;
+  const from = movement.previousValue ?? 0;
+  const to = movement.currentValue ?? 0;
+  const delta = Math.round(to - from);
+  const deltaLabel = (delta >= 0 ? '↑ ' : '↓ ') + Math.abs(delta) + ' pp';
+
+  const isSettling = to <= 1 || to >= 99;
+  const crossed50 = from < 50 !== to < 50;
+
+  const numScore = movement.seismoScore ?? 0;
+  const score = numScore.toFixed(1);
+  let level = 'Low';
+  let scoreColor = '#e4e1d8'; // line
+  if (numScore >= 7.5) {
+    level = 'Extreme';
+    scoreColor = '#f0674f'; // coral
+  } else if (numScore >= 5.0) {
+    level = 'High';
+    scoreColor = '#f5b82e'; // sun
+  } else if (numScore >= 2.5) {
+    level = 'Moderate';
+    scoreColor = '#4a9bf0'; // sky
+  }
+
+  const topQuestion = movement.marketMovements?.[0]?.question || movement.title;
+  const eventTitle =
+    movement.title === topQuestion ? 'Single market' : movement.title;
+  const question = topQuestion;
+
+  const formatMoney = (u: number) => {
+    if (u >= 1000000) return `$${(u / 1000000).toFixed(1)}M`;
+    if (u >= 1000) return `$${Math.round(u / 1000)}K`;
+    return `$${Math.round(u)}`;
   };
 
-  const formatVolume = (vol: number) => {
-    if (vol === 0) return null;
-    if (vol >= 1000000) return `$${(vol / 1000000).toFixed(1)}M`;
-    if (vol >= 1000) return `$${(vol / 1000).toFixed(0)}K`;
-    return `$${vol.toFixed(0)}`;
-  };
-
-  const renderMagnitudeBar = () => {
-    const magnitude = movement.seismoScore || 0;
-    const segments = 20;
-    const filled = Math.round((magnitude / 10) * segments);
-
-    return (
-      <div className="flex h-1.5 gap-px">
-        {Array.from({ length: segments }).map((_, i) => (
-          <div
-            key={i}
-            className={`flex-1 transition-all duration-300 ${
-              i < filled
-                ? magnitude >= 7.5
-                  ? 'bg-tremor-extreme'
-                  : magnitude >= 5
-                    ? 'bg-tremor-high'
-                    : magnitude >= 2.5
-                      ? 'bg-tremor-moderate'
-                      : 'bg-muted-foreground/30'
-                : 'bg-muted-foreground/10'
-            }`}
-            style={{ transitionDelay: `${i * 20}ms` }}
-          />
-        ))}
-      </div>
-    );
-  };
+  const marketsCount = movement.marketMovements?.length || 1;
+  const volume = movement.totalVolume || movement.volume || 0;
+  const meta = `${formatMoney(volume)} 24h vol${marketsCount > 1 ? ` · ${marketsCount} markets moved` : ''}`;
 
   return (
-    <div
+    <article
       onClick={onClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -72,209 +64,102 @@ export const TremorCard = memo(function TremorCard({
       role="button"
       tabIndex={0}
       aria-pressed={isSelected}
-      className={`relative cursor-pointer border border-zinc-800 bg-zinc-950 ${isSelected ? 'border-zinc-600 shadow-2xl ring-1 ring-zinc-700/30' : 'hover:border-zinc-700 hover:shadow-xl'} group overflow-hidden transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-zinc-500`}
-      style={{
-        boxShadow:
-          '0 0 0 1px rgba(255,255,255,0.05), 0 10px 40px rgba(0,0,0,0.5)',
-      }}
+      className={`group relative flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-sm transition-all sm:flex-row sm:items-start sm:gap-4 ${
+        isSelected
+          ? 'border-2 border-sky-deep shadow-md'
+          : 'border border-line/50 hover:border-line hover:shadow-md'
+      }`}
     >
-      {/* Top accent for high magnitude */}
-      {movement.seismoScore && movement.seismoScore >= 5 ? (
+      {/* Mobile Top Header (Score + Titles) */}
+      <div className="flex items-center gap-3 sm:hidden">
         <div
-          className={`absolute left-0 right-0 top-0 h-0.5 ${
-            movement.seismoScore >= 7.5 ? 'bg-tremor-extreme' : 'bg-tremor-high'
-          }`}
-        />
-      ) : null}
-
-      <div className="flex">
-        {/* Image on the left - full height */}
-        {movement.image && (
-          <div className="w-20 flex-shrink-0 border-r border-zinc-800/50 bg-zinc-900">
-            <img
-              src={movement.image}
-              alt=""
-              className="h-full w-full object-cover opacity-60 transition-opacity hover:opacity-80"
-              loading="lazy"
-            />
-          </div>
-        )}
-
-        <div className="flex-1 p-4">
-          {/* MAIN TITLE - Could be event or market depending on context */}
-          <div className="mb-3">
-            <h3 className="text-base font-bold leading-tight text-white">
-              {movement.title}
-            </h3>
-
-            {/* Always show the market context for clarity */}
-            {movement.marketMovements &&
-              movement.marketMovements.length > 0 &&
-              movement.marketMovements[0] && (
-                <div className="mt-2 rounded border border-zinc-800/50 bg-zinc-900/30 p-2">
-                  <div className="mb-1 text-[9px] uppercase tracking-wider text-zinc-500">
-                    {movement.marketMovements.length > 1
-                      ? `LEADING MARKET (${movement.marketMovements.length} TOTAL)`
-                      : 'MARKET'}
-                  </div>
-                  <p className="text-xs font-medium text-zinc-100">
-                    {movement.marketMovements[0].question}
-                  </p>
-                </div>
-              )}
-          </div>
-
-          {/* MOVEMENT SECTION - The actual change */}
-          <div className="mb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="mb-1 text-[9px] uppercase tracking-wider text-zinc-500">
-                  PROBABILITY SHIFT
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-sm text-zinc-400">
-                    {movement.previousValue?.toFixed(0) ?? 0}%
-                  </span>
-                  <span className="text-zinc-500">→</span>
-                  <span className="text-xl font-bold text-white">
-                    {movement.currentValue?.toFixed(0) ?? 0}%
-                  </span>
-                  <span className="text-[10px] font-medium text-zinc-400">
-                    YES
-                  </span>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="mb-1 text-[9px] uppercase tracking-wider text-zinc-500">
-                  INTENSITY
-                </div>
-                <div
-                  className={`text-2xl font-bold ${
-                    movement.seismoScore && movement.seismoScore >= 7.5
-                      ? 'text-tremor-extreme'
-                      : movement.seismoScore && movement.seismoScore >= 5
-                        ? 'text-tremor-high'
-                        : movement.seismoScore && movement.seismoScore >= 2.5
-                          ? 'text-tremor-moderate'
-                          : 'text-white'
-                  }`}
-                >
-                  {movement.seismoScore?.toFixed(1)}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Intensity Bar */}
-          <div className="mb-3">{renderMagnitudeBar()}</div>
-
-          {/* Bottom metadata - Volume, Category, Time */}
-          <div className="grid grid-cols-3 gap-2 text-[9px] text-zinc-500">
-            <div>
-              {movement.category && (
-                <>
-                  <div className="uppercase tracking-wider text-zinc-600">
-                    CATEGORY
-                  </div>
-                  <div className="text-zinc-400">{movement.category}</div>
-                </>
-              )}
-            </div>
-            <div>
-              {(() => {
-                const vol = formatVolume(
-                  movement.totalVolume || movement.volume || 0
-                );
-                return vol ? (
-                  <>
-                    <div className="uppercase tracking-wider text-zinc-600">
-                      VOLUME
-                    </div>
-                    <div className="text-zinc-400">{vol}</div>
-                  </>
-                ) : null;
-              })()}
-            </div>
-            <div className="text-right">
-              <div className="uppercase tracking-wider text-zinc-600">
-                UPDATED
-              </div>
-              <div className="text-zinc-400">
-                {movement.timestamp ? formatTime(movement.timestamp) : 'now'}
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom actions bar */}
-          <div className="mt-3 flex items-center justify-between border-t border-zinc-800/50 pt-2">
-            {/* Polymarket link - show if we have URL */}
-            {movement.url ? (
-              <a
-                href={movement.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="group relative overflow-hidden rounded border border-zinc-700/30 bg-zinc-900/50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 transition-all hover:border-zinc-600 hover:text-zinc-200"
-              >
-                <span className="relative z-10 flex items-center gap-1.5">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span>Market</span>
-                </span>
-                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-zinc-800/30 to-zinc-700/30 transition-transform group-hover:translate-x-0" />
-              </a>
-            ) : (
-              <div /> // Empty div to maintain spacing
-            )}
-
-            {/* Action buttons */}
-            <div className="flex items-center gap-2">
-              {/* Details button - glows when intelligence is available */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClick?.();
-                }}
-                className={`group relative overflow-hidden rounded border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider transition-all ${
-                  movement.seismoScore && movement.seismoScore >= 5
-                    ? 'border-tremor-pulse/30 bg-tremor-pulse/5 text-tremor-pulse hover:border-tremor-pulse hover:bg-tremor-pulse/10'
-                    : 'border-zinc-700/30 bg-zinc-900/50 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
-                }`}
-              >
-                <span className="relative z-10 flex items-center gap-1.5">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M4 6h16M4 12h16M4 18h16"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span>Details</span>
-                  {movement.seismoScore && movement.seismoScore >= 5 && (
-                    <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-tremor-pulse" />
-                  )}
-                </span>
-                <div
-                  className={`absolute inset-0 -translate-x-full transition-transform group-hover:translate-x-0 ${
-                    movement.seismoScore && movement.seismoScore >= 5
-                      ? 'bg-gradient-to-r from-tremor-pulse/10 to-tremor-pulse/5'
-                      : 'bg-gradient-to-r from-zinc-800/30 to-zinc-700/30'
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
+          className="flex w-14 flex-none flex-col items-center rounded-md py-1.5 text-ink shadow-sm"
+          style={{ backgroundColor: scoreColor }}
+        >
+          <span className="text-xl font-semibold leading-[26px]">{score}</span>
+          <span className="font-mono text-[10px] font-medium uppercase leading-[14px]">
+            {level}
+          </span>
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate text-xs leading-4 text-muted">
+            {eventTitle}
+          </span>
+          <h3 className="line-clamp-2 text-base font-semibold leading-[22px] text-ink">
+            {question}
+          </h3>
         </div>
       </div>
-    </div>
+
+      {/* Desktop Score Tile (Left column) */}
+      <div
+        className="hidden w-[84px] flex-none flex-col items-center gap-0.5 rounded-md py-3 text-ink shadow-sm sm:flex"
+        style={{ backgroundColor: scoreColor }}
+      >
+        <span className="text-[28px] font-semibold leading-[34px]">
+          {score}
+        </span>
+        <span className="font-mono text-xs font-medium uppercase leading-4">
+          {level}
+        </span>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        {/* Desktop Event Title + Question */}
+        <div className="hidden flex-col gap-1 sm:flex">
+          <div className="flex flex-wrap gap-2 text-[13px] leading-[18px] text-muted">
+            <span>{eventTitle}</span>
+          </div>
+          <h3 className="m-0 text-xl font-semibold leading-[26px] text-ink">
+            {question}
+          </h3>
+        </div>
+
+        {/* Probability shift & badges row */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 sm:pt-0">
+          <span className="font-mono text-sm font-medium leading-5 text-ink">
+            {from}% → {to}%
+          </span>
+
+          <span className="rounded-sm border border-line bg-paper px-2 py-0.5 font-mono text-xs font-medium text-ink">
+            {deltaLabel}
+          </span>
+
+          {isSettling && (
+            <span className="rounded-sm bg-line px-2 py-0.5 font-mono text-xs font-medium text-ink">
+              Settling
+            </span>
+          )}
+
+          {crossed50 && (
+            <span className="rounded-sm border border-sky-deep bg-paper px-2 py-0.5 font-mono text-xs font-medium text-sky-deep">
+              Crossed 50%
+            </span>
+          )}
+
+          <span className="ml-auto hidden font-mono text-xs font-medium text-muted sm:inline">
+            {meta}
+          </span>
+          <span className="ml-auto font-mono text-xs font-medium text-muted sm:hidden">
+            {formatMoney(volume)}
+            {marketsCount > 1 ? ` · ${marketsCount} mkts` : ''}
+          </span>
+        </div>
+      </div>
+
+      {/* Open market link */}
+      {movement.url && movement.url !== '#' && (
+        <a
+          href={movement.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex min-h-[44px] flex-none items-center justify-end px-2 text-[13px] font-semibold text-sky-deep no-underline transition-colors hover:text-ink sm:self-center"
+        >
+          Open market
+        </a>
+      )}
+    </article>
   );
 });

@@ -1,7 +1,5 @@
 'use client';
 
-import { MarketSummary } from './market-summary';
-
 interface SidebarProps {
   selectedWindow: '5m' | '60m' | '1440m';
   onChangeWindow: (w: '5m' | '60m' | '1440m') => void;
@@ -13,6 +11,9 @@ interface SidebarProps {
   onChangeVolume?: (
     volume: 'all' | 'whale' | 'high' | 'medium' | 'low'
   ) => void;
+  hideSettling?: boolean;
+  onToggleSettling?: () => void;
+  settlingCount?: number;
 }
 
 export function Sidebar({
@@ -22,269 +23,239 @@ export function Sidebar({
   onChangeIntensity,
   selectedVolume = 'all',
   onChangeVolume,
+  hideSettling = true,
+  onToggleSettling,
+  settlingCount,
 }: SidebarProps) {
-  const windows = [
-    { id: '1440m', label: '24 HOUR', desc: 'Daily trends' },
-    { id: '60m', label: '1 HOUR', desc: 'Active shifts' },
-    { id: '5m', label: '5 MIN', desc: 'Flash moves' },
-  ];
-
   const intensityFilters = [
-    { id: 'all', label: 'ALL', range: 'Show all', color: 'bg-zinc-600' },
     {
-      id: 'extreme',
-      label: 'EXTREME',
+      id: 'all' as const,
+      label: 'All',
+      hint: 'Every tremor',
+      range: '0–10',
+      swatch: '#1c2430',
+    },
+    {
+      id: 'extreme' as const,
+      label: 'Extreme',
+      hint: 'Market earthquake',
       range: '7.5+',
-      color: 'bg-tremor-extreme',
+      swatch: '#f0674f',
     },
-    { id: 'high', label: 'HIGH', range: '5.0-7.5', color: 'bg-tremor-high' },
     {
-      id: 'moderate',
-      label: 'MODERATE',
-      range: '2.5-5.0',
-      color: 'bg-tremor-moderate',
+      id: 'high' as const,
+      label: 'High',
+      hint: 'Major movement',
+      range: '5–7.5',
+      swatch: '#f5b82e',
     },
-    { id: 'low', label: 'LOW', range: '<2.5', color: 'bg-zinc-700' },
+    {
+      id: 'moderate' as const,
+      label: 'Moderate',
+      hint: 'Notable shift',
+      range: '2.5–5',
+      swatch: '#4a9bf0',
+    },
+    {
+      id: 'low' as const,
+      label: 'Low',
+      hint: 'Background noise',
+      range: '<2.5',
+      swatch: '#e4e1d8',
+    },
   ];
 
   const volumeFilters = [
-    { id: 'all', label: 'ALL', range: 'All volumes', desc: 'Show all' },
-    { id: 'whale', label: 'WHALE', range: '>$500K', desc: 'Mega markets' },
-    { id: 'high', label: 'HIGH', range: '$100K-$500K', desc: 'Major markets' },
-    {
-      id: 'medium',
-      label: 'MEDIUM',
-      range: '$25K-$100K',
-      desc: 'Active markets',
-    },
-    { id: 'low', label: 'LOW', range: '<$25K', desc: 'Small markets' },
+    { id: 'all' as const, label: 'All', range: 'any' },
+    { id: 'whale' as const, label: 'Whale', range: '>$500K' },
+    { id: 'high' as const, label: 'High', range: '$100–500K' },
+    { id: 'medium' as const, label: 'Medium', range: '$25–100K' },
+    { id: 'low' as const, label: 'Low', range: '<$25K' },
   ];
 
+  const windows = [
+    { id: '5m' as const, label: '5 min' },
+    { id: '60m' as const, label: '1 hour' },
+    { id: '1440m' as const, label: '24 hour' },
+  ];
+
+  const windowHints: Record<string, string> = {
+    '5m': 'Flash moves as they happen.',
+    '60m': 'Active shifts. A good default while markets are busy.',
+    '1440m': 'The full picture for the day.',
+  };
+
+  const settlingHint =
+    settlingCount !== undefined
+      ? `${settlingCount} pinned near 0 or 100%`
+      : 'Filters tremors pinned near 0 or 100%';
+
   return (
-    <aside className="from-zinc-950/98 flex h-full w-64 flex-col overflow-y-auto border-r border-zinc-800/50 bg-gradient-to-b to-black/95">
-      <div className="flex-shrink-0 px-5 pt-4">
-        <h3 className="mb-4 text-xs font-bold tracking-wider text-zinc-600">
-          FILTER BY INTENSITY
-        </h3>
-        <div className="space-y-2">
-          {intensityFilters.map((filter) => (
-            <button
-              key={filter.id}
-              onClick={() => {
-                const intensity = filter.id as
-                  | 'all'
-                  | 'extreme'
-                  | 'high'
-                  | 'moderate'
-                  | 'low';
-                onChangeIntensity(intensity);
-              }}
-              className={`block w-full text-left transition-all ${
-                selectedIntensity === filter.id
-                  ? 'border-2 bg-zinc-950'
-                  : 'border bg-zinc-950 hover:border-zinc-600'
-              }`}
-              style={{
-                borderColor:
-                  selectedIntensity === filter.id
-                    ? filter.id === 'extreme'
-                      ? 'rgb(239 68 68)'
-                      : filter.id === 'high'
-                        ? 'rgb(251 146 60)'
-                        : filter.id === 'moderate'
-                          ? 'rgb(250 204 21)'
-                          : filter.id === 'low'
-                            ? 'rgb(113 113 122)'
-                            : 'rgb(113 113 122)'
-                    : 'rgb(39 39 42 / 0.5)',
-                boxShadow:
-                  selectedIntensity === filter.id
-                    ? '0 0 0 1px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.5)'
-                    : '0 0 0 1px rgba(255,255,255,0.02), 0 2px 8px rgba(0,0,0,0.3)',
-              }}
-            >
-              <div className="p-3">
-                <div className="flex items-center gap-3">
-                  {filter.id === 'all' ? (
-                    <img
-                      src="/tremor-icon.svg"
-                      alt="Tremor logo"
-                      className="h-8 w-8"
-                    />
-                  ) : (
-                    <div className={`h-8 w-8 ${filter.color} rounded`} />
-                  )}
-                  <div className="flex-1">
-                    <div className="flex items-baseline gap-2">
-                      {filter.range !== 'Show all' && (
-                        <span className="text-sm font-bold text-zinc-100">
-                          {filter.range}
-                        </span>
-                      )}
-                      <span
-                        className={`text-[10px] uppercase ${
-                          filter.id === 'extreme'
-                            ? 'text-tremor-extreme'
-                            : filter.id === 'high'
-                              ? 'text-tremor-high'
-                              : filter.id === 'moderate'
-                                ? 'text-tremor-moderate'
-                                : 'text-zinc-500'
-                        }`}
-                      >
-                        {filter.label}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-zinc-500">
-                      {filter.id === 'extreme'
-                        ? 'Market earthquake'
-                        : filter.id === 'high'
-                          ? 'Major movement'
-                          : filter.id === 'moderate'
-                            ? 'Notable shift'
-                            : filter.id === 'low'
-                              ? 'Background noise'
-                              : filter.range}
-                    </div>
-                  </div>
-                  {selectedIntensity === filter.id && (
-                    <div className="h-2 w-2 animate-pulse rounded-full bg-tremor-pulse"></div>
-                  )}
-                </div>
-              </div>
-            </button>
-          ))}
+    <aside
+      aria-label="Filters"
+      className="flex w-full flex-col gap-6 md:gap-8 lg:w-[280px] lg:flex-none xl:w-[320px]"
+    >
+      {/* Intensity Section */}
+      <section className="flex flex-col gap-2">
+        <h2 className="mb-1 font-mono text-xs font-medium uppercase leading-4 text-muted">
+          Intensity
+        </h2>
+        <div className="flex flex-col gap-2">
+          {intensityFilters.map((opt) => {
+            const isSelected = selectedIntensity === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onChangeIntensity(opt.id)}
+                aria-pressed={isSelected}
+                className={`flex min-h-[52px] items-center gap-3 rounded-md bg-surface px-4 py-2 text-left transition-colors ${
+                  isSelected
+                    ? 'border-2 border-sky-deep shadow-sm'
+                    : 'border-2 border-surface hover:border-line'
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="h-7 w-7 flex-none rounded-[6px]"
+                  style={{ background: opt.swatch }}
+                />
+                <span className="flex flex-1 flex-col">
+                  <span className="text-base font-semibold leading-5 text-ink">
+                    {opt.label}
+                  </span>
+                  <span className="text-[13px] leading-[18px] text-muted">
+                    {opt.hint}
+                  </span>
+                </span>
+                <span className="font-mono text-xs font-medium leading-4 text-muted">
+                  {opt.range}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      </div>
+      </section>
 
-      <div className="mt-5 flex-shrink-0 px-5">
-        <h3 className="mb-3 text-xs font-bold tracking-wider text-zinc-600">
-          VOLUME FILTER
-        </h3>
-        <div className="space-y-2">
-          {volumeFilters.map((filter) => (
-            <button
-              key={filter.id}
-              onClick={() => {
-                const volume = filter.id as
-                  | 'all'
-                  | 'whale'
-                  | 'high'
-                  | 'medium'
-                  | 'low';
-                onChangeVolume?.(volume);
-              }}
-              className={`block w-full text-left transition-all ${
-                selectedVolume === filter.id
-                  ? 'border border-blue-500/50 bg-zinc-950 shadow-lg'
-                  : 'border border-zinc-800/50 bg-zinc-950 hover:border-zinc-700'
-              }`}
-              style={{
-                boxShadow:
-                  selectedVolume === filter.id
-                    ? '0 0 0 1px rgba(59,130,246,0.1), 0 4px 12px rgba(0,0,0,0.5)'
-                    : '0 0 0 1px rgba(255,255,255,0.02), 0 2px 8px rgba(0,0,0,0.3)',
-              }}
-            >
-              <div className="p-2.5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-bold text-zinc-100">
-                        {filter.range}
-                      </span>
-                      <span className="text-[9px] uppercase text-zinc-500">
-                        {filter.label}
-                      </span>
-                    </div>
-                    <div className="text-[9px] text-zinc-500">
-                      {filter.desc}
-                    </div>
-                  </div>
-                  {selectedVolume === filter.id && (
-                    <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500"></div>
-                  )}
-                </div>
-              </div>
-            </button>
-          ))}
+      {/* Market Volume Section */}
+      <section className="flex flex-col gap-2">
+        <h2 className="mb-1 font-mono text-xs font-medium uppercase leading-4 text-muted">
+          Market volume
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {volumeFilters.map((opt) => {
+            const isSelected = selectedVolume === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onChangeVolume?.(opt.id)}
+                aria-pressed={isSelected}
+                className={`flex min-h-[44px] flex-col items-start rounded-md px-3 py-1.5 text-left transition-colors ${
+                  isSelected
+                    ? 'border-2 border-sky-deep bg-surface shadow-sm'
+                    : 'border-2 border-line bg-transparent hover:bg-surface'
+                }`}
+              >
+                <span className="text-[13px] font-semibold leading-[18px] text-ink">
+                  {opt.label}
+                </span>
+                <span className="font-mono text-xs font-medium leading-4 text-muted">
+                  {opt.range}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      </div>
+      </section>
 
-      <div className="mt-5 flex-shrink-0 px-5">
-        <h3 className="mb-3 text-xs font-bold tracking-wider text-zinc-600">
-          TIME WINDOW
-        </h3>
-        <div className="space-y-2">
-          {windows.map((window) => (
-            <button
-              key={window.id}
-              onClick={() => {
-                const w = window.id as '5m' | '60m' | '1440m';
-                onChangeWindow(w);
-              }}
-              className={`block w-full text-left transition-all ${
-                selectedWindow === window.id
-                  ? 'border border-tremor-pulse/50 bg-zinc-950 shadow-lg'
-                  : 'border border-zinc-800/50 bg-zinc-950 hover:border-zinc-700'
-              }`}
-              style={{
-                boxShadow:
-                  selectedWindow === window.id
-                    ? '0 0 0 1px rgba(34,211,238,0.1), 0 4px 12px rgba(0,0,0,0.5)'
-                    : '0 0 0 1px rgba(255,255,255,0.02), 0 2px 8px rgba(0,0,0,0.3)',
-              }}
-            >
-              <div className="p-2.5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xs font-bold text-zinc-100">
-                      {window.label}
-                    </div>
-                    <div className="text-[9px] text-zinc-500">
-                      {window.desc}
-                    </div>
-                  </div>
-                  {selectedWindow === window.id && (
-                    <div className="h-2 w-2 animate-pulse rounded-full bg-tremor-pulse"></div>
-                  )}
-                </div>
-              </div>
-            </button>
-          ))}
+      {/* Time Window Section */}
+      <section className="flex flex-col gap-2">
+        <h2 className="mb-1 font-mono text-xs font-medium uppercase leading-4 text-muted">
+          Time window
+        </h2>
+        <div
+          role="group"
+          aria-label="Time window"
+          className="grid grid-cols-3 gap-1 rounded-md bg-line p-1"
+        >
+          {windows.map((opt) => {
+            const isSelected = selectedWindow === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onChangeWindow(opt.id)}
+                aria-pressed={isSelected}
+                className={`min-h-[44px] rounded-[9px] font-mono text-sm font-medium leading-5 transition-colors ${
+                  isSelected
+                    ? 'bg-surface text-ink shadow-sm'
+                    : 'bg-transparent text-ink hover:text-ink/80'
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
         </div>
-      </div>
+        <p className="m-0 text-[13px] leading-[18px] text-muted">
+          {windowHints[selectedWindow]}
+        </p>
+      </section>
 
-      {/* Market Summary - in the normal flow */}
-      <MarketSummary />
-
-      {/* Spacer to push powered by to bottom */}
-      <div className="flex-1" />
-
-      {/* Powered by - pushed to bottom */}
-      <div className="flex-shrink-0 border-t border-zinc-800/50 p-5">
-        <div className="mb-1 text-center text-[9px] uppercase tracking-wider text-zinc-600">
-          Powered by
-        </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <a
-            href="https://polymarket.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-zinc-400 transition-colors hover:text-zinc-200"
+      {/* Hide Settling Markets Toggle */}
+      {onToggleSettling && (
+        <section className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={onToggleSettling}
+            aria-pressed={hideSettling}
+            className="flex min-h-[52px] items-center gap-3 rounded-md border-2 border-surface bg-surface px-4 py-2 text-left shadow-sm transition-colors hover:border-line"
           >
-            Polymarket
-          </a>
-          <a
-            href="https://x.ai"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] text-zinc-400 transition-colors hover:text-zinc-200"
-          >
-            Grok AI
-          </a>
-        </div>
-      </div>
+            <span
+              aria-hidden="true"
+              className={`flex h-6 w-10 flex-none items-center rounded-full p-[3px] transition-colors ${
+                hideSettling
+                  ? 'justify-end bg-sky-deep'
+                  : 'justify-start bg-line'
+              }`}
+            >
+              <span className="h-[18px] w-[18px] rounded-full bg-surface shadow" />
+            </span>
+            <span className="flex flex-1 flex-col">
+              <span className="text-base font-semibold leading-5 text-ink">
+                Hide settling markets
+              </span>
+              <span className="text-[13px] leading-[18px] text-muted">
+                {settlingHint}
+              </span>
+            </span>
+          </button>
+        </section>
+      )}
+
+      {/* Attribution */}
+      <p className="m-0 text-[13px] leading-[18px] text-muted">
+        Market data from{' '}
+        <a
+          href="https://polymarket.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sky-deep transition-colors hover:text-ink"
+        >
+          Polymarket
+        </a>
+        . Social read from{' '}
+        <a
+          href="https://x.ai"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sky-deep transition-colors hover:text-ink"
+        >
+          Grok
+        </a>
+        .
+      </p>
     </aside>
   );
 }

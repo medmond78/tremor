@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tremor feed</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap"
+        />
+        <style>
+          body {
+            margin: 0;
+            background: #fbfaf6;
+          }
+          a {
+            color: #1b5fbf;
+          }
+          a:hover {
+            color: #1c2430;
+          }
+          button {
+            font: inherit;
+            color: inherit;
+            cursor: pointer;
+          }
+          button:focus-visible,
+          a:focus-visible {
+            outline: 2px solid #1b5fbf;
+            outline-offset: 2px;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          min-height: 100%;
+          background: #fbfaf6;
+          color: #1c2430;
+          font-family: Inter, system-ui, sans-serif;
+          font-size: 16px;
+          line-height: 24px;
+        "
+      >
+        <header
+          style="
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 20px 32px;
+            border-bottom: 1px solid #e4e1d8;
+          "
+        >
+          <div
+            style="
+              display: flex;
+              align-items: baseline;
+              gap: 16px;
+              flex-wrap: wrap;
+            "
+          >
+            <div
+              style="
+                font-size: 28px;
+                line-height: 34px;
+                font-weight: 600;
+                letter-spacing: -0.01em;
+              "
+            >
+              Tremor
+            </div>
+            <div
+              style="
+                font-family: 'JetBrains Mono', ui-monospace, monospace;
+                font-size: 12px;
+                line-height: 16px;
+                font-weight: 500;
+                color: #5d6673;
+                text-transform: uppercase;
+              "
+            >
+              Where money talks first
+            </div>
+          </div>
+          <nav
+            aria-label="Site"
+            style="
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              flex-wrap: wrap;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 12px;
+                border-radius: 12px;
+                background: #ffffff;
+                font-family: 'JetBrains Mono', ui-monospace, monospace;
+                font-size: 12px;
+                line-height: 16px;
+                font-weight: 500;
+                text-transform: uppercase;
+              "
+            >
+              <span
+                aria-hidden="true"
+                style="
+                  width: 10px;
+                  height: 10px;
+                  border-radius: 50%;
+                  background: #3fb37f;
+                "
+              ></span>
+              <span>Live · {{windowLabel}}</span>
+            </div>
+            <a
+              href="#how"
+              style="
+                display: inline-flex;
+                align-items: center;
+                min-height: 44px;
+                padding: 0 16px;
+                border-radius: 12px;
+                font-size: 13px;
+                font-weight: 600;
+                text-decoration: none;
+              "
+              >How it works</a
+            >
+            <a
+              href="https://github.com/sculptdotfun/tremor"
+              style="
+                display: inline-flex;
+                align-items: center;
+                min-height: 44px;
+                padding: 0 12px;
+                font-size: 13px;
+                text-decoration: none;
+              "
+              >GitHub</a
+            >
+            <a
+              href="https://x.com/tremordotlive"
+              style="
+                display: inline-flex;
+                align-items: center;
+                min-height: 44px;
+                padding: 0 12px;
+                font-size: 13px;
+                text-decoration: none;
+              "
+              >X</a
+            >
+          </nav>
+        </header>
+
+        <div
+          style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: 32px;
+            padding: 32px;
+            max-width: 1376px;
+            margin: 0 auto;
+            box-sizing: border-box;
+          "
+        >
+          <aside
+            aria-label="Filters"
+            style="
+              flex: 1 1 260px;
+              max-width: 320px;
+              display: flex;
+              flex-direction: column;
+              gap: 32px;
+            "
+          >
+            <section style="display: flex; flex-direction: column; gap: 8px">
+              <h2
+                style="
+                  margin: 0 0 4px;
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 12px;
+                  line-height: 16px;
+                  font-weight: 500;
+                  color: #5d6673;
+                  text-transform: uppercase;
+                "
+              >
+                Intensity
+              </h2>
+              <sc-for
+                list="{{intensityOpts}}"
+                as="opt"
+                hint-placeholder-count="5"
+              >
+                <button
+                  type="button"
+                  onClick="{{opt.pick}}"
+                  aria-pressed="{{opt.pressed}}"
+                  style="display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 16px; border-radius: 12px; background: #ffffff; border: 2px solid {{opt.border}}; text-align: left"
+                >
+                  <span
+                    aria-hidden="true"
+                    style="width: 28px; height: 28px; border-radius: 6px; flex: none; background: {{opt.swatch}}"
+                  ></span>
+                  <span style="display: flex; flex-direction: column; flex: 1">
+                    <span
+                      style="
+                        font-size: 16px;
+                        line-height: 20px;
+                        font-weight: 600;
+                      "
+                      >{{opt.label}}</span
+                    >
+                    <span
+                      style="font-size: 13px; line-height: 18px; color: #5d6673"
+                      >{{opt.hint}}</span
+                    >
+                  </span>
+                  <span
+                    style="
+                      font-family: 'JetBrains Mono', ui-monospace, monospace;
+                      font-size: 12px;
+                      line-height: 16px;
+                      font-weight: 500;
+                      color: #5d6673;
+                    "
+                    >{{opt.range}}</span
+                  >
+                </button>
+              </sc-for>
+            </section>
+
+            <section style="display: flex; flex-direction: column; gap: 8px">
+              <h2
+                style="
+                  margin: 0 0 4px;
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 12px;
+                  line-height: 16px;
+                  font-weight: 500;
+                  color: #5d6673;
+                  text-transform: uppercase;
+                "
+              >
+                Market volume
+              </h2>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for
+                  list="{{volumeOpts}}"
+                  as="opt"
+                  hint-placeholder-count="5"
+                >
+                  <button
+                    type="button"
+                    onClick="{{opt.pick}}"
+                    aria-pressed="{{opt.pressed}}"
+                    style="display: flex; flex-direction: column; align-items: flex-start; min-height: 44px; padding: 6px 12px; border-radius: 12px; background: {{opt.bg}}; border: 2px solid {{opt.border}}; text-align: left"
+                  >
+                    <span
+                      style="
+                        font-size: 13px;
+                        line-height: 18px;
+                        font-weight: 600;
+                      "
+                      >{{opt.label}}</span
+                    >
+                    <span
+                      style="
+                        font-family: 'JetBrains Mono', ui-monospace, monospace;
+                        font-size: 12px;
+                        line-height: 16px;
+                        font-weight: 500;
+                        color: #5d6673;
+                      "
+                      >{{opt.range}}</span
+                    >
+                  </button>
+                </sc-for>
+              </div>
+            </section>
+
+            <section style="display: flex; flex-direction: column; gap: 8px">
+              <h2
+                style="
+                  margin: 0 0 4px;
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 12px;
+                  line-height: 16px;
+                  font-weight: 500;
+                  color: #5d6673;
+                  text-transform: uppercase;
+                "
+              >
+                Time window
+              </h2>
+              <div
+                role="group"
+                aria-label="Time window"
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(3, minmax(0, 1fr));
+                  gap: 4px;
+                  padding: 4px;
+                  border-radius: 12px;
+                  background: #e4e1d8;
+                "
+              >
+                <sc-for
+                  list="{{windowOpts}}"
+                  as="opt"
+                  hint-placeholder-count="3"
+                >
+                  <button
+                    type="button"
+                    onClick="{{opt.pick}}"
+                    aria-pressed="{{opt.pressed}}"
+                    style="min-height: 44px; border: 0; border-radius: 9px; background: {{opt.bg}}; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 14px; line-height: 20px; font-weight: 500"
+                  >
+                    {{opt.label}}
+                  </button>
+                </sc-for>
+              </div>
+              <p
+                style="
+                  margin: 0;
+                  font-size: 13px;
+                  line-height: 18px;
+                  color: #5d6673;
+                "
+              >
+                {{windowHint}}
+              </p>
+            </section>
+
+            <section style="display: flex; flex-direction: column; gap: 8px">
+              <button
+                type="button"
+                onClick="{{toggleSettling}}"
+                aria-pressed="{{hidePressed}}"
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 12px;
+                  min-height: 52px;
+                  padding: 8px 16px;
+                  border-radius: 12px;
+                  background: #ffffff;
+                  border: 2px solid #ffffff;
+                  text-align: left;
+                "
+              >
+                <span
+                  aria-hidden="true"
+                  style="width: 40px; height: 24px; flex: none; border-radius: 12px; background: {{trackBg}}; display: flex; align-items: center; padding: 3px; box-sizing: border-box; justify-content: {{knobSide}}"
+                  ><span
+                    style="
+                      width: 18px;
+                      height: 18px;
+                      border-radius: 50%;
+                      background: #ffffff;
+                    "
+                  ></span
+                ></span>
+                <span style="display: flex; flex-direction: column; flex: 1">
+                  <span
+                    style="font-size: 16px; line-height: 20px; font-weight: 600"
+                    >Hide settling markets</span
+                  >
+                  <span
+                    style="font-size: 13px; line-height: 18px; color: #5d6673"
+                    >{{settlingHint}}</span
+                  >
+                </span>
+              </button>
+            </section>
+
+            <p
+              style="
+                margin: 0;
+                font-size: 13px;
+                line-height: 18px;
+                color: #5d6673;
+              "
+            >
+              Market data from <a href="https://polymarket.com">Polymarket</a>.
+              Social read from <a href="https://x.ai">Grok</a>.
+            </p>
+          </aside>
+
+          <main
+            style="
+              flex: 999 1 560px;
+              min-width: 0;
+              display: flex;
+              flex-direction: column;
+              gap: 16px;
+            "
+          >
+            <section
+              aria-label="Tremor report"
+              style="
+                background: #ffffff;
+                border-radius: 20px;
+                padding: 24px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  gap: 16px;
+                  flex-wrap: wrap;
+                "
+              >
+                <span
+                  style="
+                    font-family: 'JetBrains Mono', ui-monospace, monospace;
+                    font-size: 12px;
+                    line-height: 16px;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                  "
+                  >Tremor report</span
+                >
+                <span
+                  style="
+                    font-family: 'JetBrains Mono', ui-monospace, monospace;
+                    font-size: 12px;
+                    line-height: 16px;
+                    font-weight: 500;
+                    color: #5d6673;
+                    text-transform: uppercase;
+                  "
+                  >Every 30 min</span
+                >
+              </div>
+              <p
+                style="
+                  margin: 0;
+                  font-size: 20px;
+                  line-height: 28px;
+                  color: #5d6673;
+                "
+              >
+                No report yet. It will appear here once the first one is
+                generated.
+              </p>
+            </section>
+
+            <div
+              style="
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: 16px;
+                padding: 16px 4px 0;
+                flex-wrap: wrap;
+              "
+            >
+              <h1
+                style="
+                  margin: 0;
+                  font-size: 28px;
+                  line-height: 34px;
+                  font-weight: 600;
+                "
+              >
+                {{countLabel}}
+              </h1>
+              <span
+                style="
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 12px;
+                  line-height: 16px;
+                  font-weight: 500;
+                  color: #5d6673;
+                  text-transform: uppercase;
+                "
+                >Sorted by intensity</span
+              >
+            </div>
+
+            <sc-if value="{{isEmpty}}" hint-placeholder-val="{{ false }}">
+              <div
+                style="
+                  background: #ffffff;
+                  border-radius: 20px;
+                  padding: 32px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                "
+              >
+                <div
+                  style="font-size: 20px; line-height: 26px; font-weight: 600"
+                >
+                  All quiet
+                </div>
+                <div style="color: #5d6673">{{emptyText}}</div>
+              </div>
+            </sc-if>
+
+            <sc-for list="{{events}}" as="e" hint-placeholder-count="5">
+              <article
+                style="
+                  background: #ffffff;
+                  border-radius: 20px;
+                  padding: 16px;
+                  display: flex;
+                  gap: 16px;
+                  align-items: flex-start;
+                "
+              >
+                <div
+                  style="width: 84px; flex: none; border-radius: 12px; padding: 12px 0; display: flex; flex-direction: column; align-items: center; gap: 2px; background: {{e.color}}; color: #1c2430"
+                >
+                  <span
+                    style="font-size: 28px; line-height: 34px; font-weight: 600"
+                    >{{e.score}}</span
+                  >
+                  <span
+                    style="
+                      font-family: 'JetBrains Mono', ui-monospace, monospace;
+                      font-size: 12px;
+                      line-height: 16px;
+                      font-weight: 500;
+                      text-transform: uppercase;
+                    "
+                    >{{e.level}}</span
+                  >
+                </div>
+                <div
+                  style="
+                    flex: 1;
+                    min-width: 0;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      gap: 8px;
+                      flex-wrap: wrap;
+                      font-size: 13px;
+                      line-height: 18px;
+                      color: #5d6673;
+                    "
+                  >
+                    <span>{{e.event}}</span>
+                  </div>
+                  <h3
+                    style="
+                      margin: 0;
+                      font-size: 20px;
+                      line-height: 26px;
+                      font-weight: 600;
+                    "
+                  >
+                    {{e.question}}
+                  </h3>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 8px;
+                      flex-wrap: wrap;
+                    "
+                  >
+                    <span
+                      style="
+                        font-family: 'JetBrains Mono', ui-monospace, monospace;
+                        font-size: 14px;
+                        line-height: 20px;
+                        font-weight: 500;
+                      "
+                      >{{e.from}}% → {{e.to}}%</span
+                    >
+                    <span
+                      style="
+                        padding: 2px 8px;
+                        border-radius: 6px;
+                        background: #fbfaf6;
+                        border: 1px solid #e4e1d8;
+                        font-family: 'JetBrains Mono', ui-monospace, monospace;
+                        font-size: 12px;
+                        line-height: 16px;
+                        font-weight: 500;
+                      "
+                      >{{e.deltaLabel}}</span
+                    >
+                    <sc-if
+                      value="{{e.settling}}"
+                      hint-placeholder-val="{{ false }}"
+                    >
+                      <span
+                        style="
+                          padding: 2px 8px;
+                          border-radius: 6px;
+                          background: #e4e1d8;
+                          font-family:
+                            'JetBrains Mono', ui-monospace, monospace;
+                          font-size: 12px;
+                          line-height: 16px;
+                          font-weight: 500;
+                        "
+                        >Settling</span
+                      >
+                    </sc-if>
+                    <sc-if
+                      value="{{e.crossed}}"
+                      hint-placeholder-val="{{ false }}"
+                    >
+                      <span
+                        style="
+                          padding: 2px 8px;
+                          border-radius: 6px;
+                          background: #fbfaf6;
+                          border: 1px solid #1b5fbf;
+                          color: #1b5fbf;
+                          font-family:
+                            'JetBrains Mono', ui-monospace, monospace;
+                          font-size: 12px;
+                          line-height: 16px;
+                          font-weight: 500;
+                        "
+                        >Crossed 50%</span
+                      >
+                    </sc-if>
+                    <span
+                      style="
+                        margin-left: auto;
+                        font-family: 'JetBrains Mono', ui-monospace, monospace;
+                        font-size: 12px;
+                        line-height: 16px;
+                        font-weight: 500;
+                        color: #5d6673;
+                      "
+                      >{{e.meta}}</span
+                    >
+                  </div>
+                  <sc-if
+                    value="{{e.signal}}"
+                    hint-placeholder-val="{{ false }}"
+                  >
+                    <div
+                      style="
+                        display: flex;
+                        gap: 12px;
+                        padding: 12px 16px;
+                        border-radius: 12px;
+                        background: #fbfaf6;
+                      "
+                    >
+                      <span
+                        style="
+                          font-family:
+                            'JetBrains Mono', ui-monospace, monospace;
+                          font-size: 12px;
+                          line-height: 20px;
+                          font-weight: 500;
+                          color: #5d6673;
+                          text-transform: uppercase;
+                          flex: none;
+                        "
+                        >On X</span
+                      >
+                      <span style="font-size: 13px; line-height: 20px"
+                        >[What traders on X are saying about this move.]</span
+                      >
+                    </div>
+                  </sc-if>
+                </div>
+                <a
+                  href="{{e.url}}"
+                  style="
+                    flex: none;
+                    display: inline-flex;
+                    align-items: center;
+                    min-height: 44px;
+                    padding: 0 8px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    text-decoration: none;
+                  "
+                  >Open market</a
+                >
+              </article>
+            </sc-for>
+          </main>
+        </div>
+      </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{"showSignals":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":1320}}'
+    >
+      class Component extends DCLogic {
+        constructor(props) {
+          super(props);
+          this.state = { intensity: 'all', volume: 'all', win: '24h', hideSettling: true };
+        }
+        renderVals() {
+          var s = this.state;
+          var self = this;
+          var showSignals = this.props.showSignals ?? true;
+          var COLORS = { extreme: '#f0674f', high: '#f5b82e', moderate: '#4a9bf0', low: '#e4e1d8' };
+          var LEVELS = { extreme: 'Extreme', high: 'High', moderate: 'Moderate', low: 'Low' };
+          // Snapshot of scoring:getTopTremors from the local Convex backend, 15 Oct 2026.
+          // [score, event title, top market question, prev %, curr %, event 24h volume USD, active markets, slug]
+          var SNAP = {
+            '24h': [
+              [10, 'Highest temperature in Paris on October 15?', 'Will the highest temperature in Paris be 24°C on October 15?', 64, 99.9, 62862, 1, 'highest-temperature-in-paris-on-october-15-2026'],
+              [10, 'FC København vs. SC Braga - More Markets', 'FC København vs. SC Braga: O/U 2.5', 46, 99.9, 71743, 3, 'col-kob-scb-2026-10-15-more-markets'],
+              [10, 'What price will Ethereum hit on October 15?', 'Will Ethereum reach $2,450 on October 15?', 28, 98, 80530, 1, 'what-price-will-ethereum-hit-on-october-15-2026'],
+              [7.1, 'Next Fable Model (5.2+) released by...?', 'Next Fable Model (5.2+) released by October 24, 2026?', 68, 78, 59654, 2, 'next-fable-model-5pt2-released-byptptpt'],
+              [7.0, 'Will Anthropic’s valuation hit __ by December 31?', 'Will Anthropic’s valuation hit (HIGH) $1.75T by December 31?', 73, 63, 203523, 4, 'will-anthropics-valuation-hit-by-december-31'],
+              [6.5, 'What price will Ethereum hit in October?', 'Will Ethereum dip to $2,300 in October?', 57, 48, 236049, 3, 'what-price-will-ethereum-hit-in-october-2026'],
+              [6.2, 'Who wins the Senate pending Hormuz Agreement before the midterms?', 'Will there be no Hormuz agreement?', 85, 94, 476554, 2, 'who-wins-the-senate-pending-hormuz-agreement-before-the-midterms'],
+              [5.5, 'Raptors vs. Knicks', 'Spread: Knicks (-5.5)', 49, 56, 248450, 3, 'nba-tor-nyk-2026-10-15'],
+              [5.2, 'Anthropic IPO Closing Market Cap', 'Will Anthropic’s market cap be between $2.0T and $2.25T at market close on IPO day?', 19, 12, 82086, 1, 'anthropic-ipo-closing-market-cap-higher-strikes'],
+              [4.9, 'Who wins the Senate pending oil above or below $80 before the midterms?', 'Will oil be at least $80 on November 2 and the Democrats win the Senate?', 55, 61, 175231, 1, 'who-wins-the-senate-pending-oil-above-or-below-80-before-the-midterms'],
+              [4.5, 'Utah vs. Oilers', 'Utah vs. Oilers', 47, 52, 148132, 2, 'nhl-utah-edm-2026-10-15'],
+              [3.6, 'LoL: BNK FEARX vs Team WE (BO5) - Demacia Cup Global Invitational Playoffs', 'LoL: BNK FEARX vs Team WE (BO5) - Demacia Cup Global Invitational Playoffs', 65, 69, 67611, 1, 'lol-fox1-we-2026-10-17']
+            ],
+            '1h': [
+              [10, 'CA Huracán vs. Gimnasia y Esgrima de La Plata', 'Will CA Huracán win on 2026-10-15?', 45, 18, 176869, 1, 'arg-cah-gim-2026-10-15'],
+              [10, 'LoL: FURIA Esports vs MVK Esports (BO5) - Worlds Play-In', 'LoL: FURIA Esports vs MVK Esports - Game 1 Winner', 37, 13, 1134197, 3, 'lol-fur-mvk-2026-10-15'],
+              [8.8, 'Rangers vs. Devils', 'Rangers vs. Devils', 45, 29, 132072, 1, 'nhl-nyr-nj-2026-10-15'],
+              [8.5, 'Sabres vs. Maple Leafs', 'Sabres vs. Maple Leafs', 49, 34, 192643, 2, 'nhl-buf-tor-2026-10-15'],
+              [7.3, 'Will Anthropic’s valuation hit __ by December 31?', 'Will Anthropic’s valuation hit (HIGH) $1.75T by December 31?', 74, 63, 203523, 3, 'will-anthropics-valuation-hit-by-december-31'],
+              [4.5, 'Will the Tesla Roadster fly for 1s+?', 'Will the Tesla Roadster fly for 1s+?', 62, 57, 85167, 1, 'will-the-tesla-roadster-fly-for-1s'],
+              [10, 'FC København vs. SC Braga - More Markets', 'FC København vs. SC Braga: O/U 2.5', 46, 99.9, 71743, 3, 'col-kob-scb-2026-10-15-more-markets']
+            ],
+            '5m': [
+              [10, 'FC København vs. SC Braga - More Markets', 'FC København vs. SC Braga: O/U 2.5', 46, 99.9, 71743, 3, 'col-kob-scb-2026-10-15-more-markets']
+            ]
+          };
+          // Share of the top 100 tremors pinned at ≤1% or ≥99% in each window (same snapshot).
+          var SETTLING = { '24h': 43, '1h': 71, '5m': 100 };
+          var levelOf = function (sc) { return sc >= 7.5 ? 'extreme' : sc >= 5 ? 'high' : sc >= 2.5 ? 'moderate' : 'low'; };
+          var volBand = function (u) { return u > 500000 ? 'whale' : u > 100000 ? 'high' : u > 25000 ? 'medium' : 'low'; };
+          var money = function (u) { return u >= 1e6 ? '$' + (u / 1e6).toFixed(1) + 'M' : '$' + Math.round(u / 1000) + 'K'; };
+          var events = SNAP[s.win].map(function (r) {
+            var lv = levelOf(r[0]);
+            var d = Math.round(r[4] - r[3]);
+            var settling = r[4] >= 99 || r[4] <= 1;
+            return {
+              score: r[0].toFixed(1), lv: lv, level: LEVELS[lv], color: COLORS[lv],
+              event: r[1] === r[2] ? 'Single market' : r[1], question: r[2], from: r[3], to: r[4], usd: r[5],
+              deltaLabel: (d >= 0 ? '↑ ' : '↓ ') + Math.abs(d) + ' pp',
+              crossed: (r[3] < 50) !== (r[4] < 50),
+              settling: settling,
+              meta: money(r[5]) + ' 24h vol' + (r[6] > 1 ? ' · ' + r[6] + ' markets moved' : ''),
+              url: 'https://polymarket.com/event/' + r[7],
+              signal: showSignals && r[0] >= 5 && !settling
+            };
+          }).filter(function (e) {
+            return (s.intensity === 'all' || e.lv === s.intensity)
+              && (s.volume === 'all' || volBand(e.usd) === s.volume)
+              && !(s.hideSettling && e.settling);
+          });
+          var mk = function (key, list) {
+            return list.map(function (o) {
+              var on = s[key] === o.id;
+              return Object.assign({}, o, {
+                pressed: on ? 'true' : 'false',
+                border: on ? '#1b5fbf' : '#ffffff',
+                bg: on ? '#ffffff' : 'transparent',
+                pick: function () { var p = {}; p[key] = o.id; self.setState(p); }
+              });
+            });
+          };
+          var intensityOpts = mk('intensity', [
+            { id: 'all', label: 'All', hint: 'Every tremor', range: '0–10', swatch: 'linear-gradient(#f0674f,#f0674f)' },
+            { id: 'extreme', label: 'Extreme', hint: 'Market earthquake', range: '7.5+', swatch: COLORS.extreme },
+            { id: 'high', label: 'High', hint: 'Major movement', range: '5–7.5', swatch: COLORS.high },
+            { id: 'moderate', label: 'Moderate', hint: 'Notable shift', range: '2.5–5', swatch: COLORS.moderate },
+            { id: 'low', label: 'Low', hint: 'Background noise', range: '<2.5', swatch: COLORS.low }
+          ]);
+          intensityOpts[0].swatch = '#1c2430';
+          var volumeOpts = mk('volume', [
+            { id: 'all', label: 'All', range: 'any' },
+            { id: 'whale', label: 'Whale', range: '>$500K' },
+            { id: 'high', label: 'High', range: '$100–500K' },
+            { id: 'medium', label: 'Medium', range: '$25–100K' },
+            { id: 'low', label: 'Low', range: '<$25K' }
+          ]).map(function (o) { return Object.assign(o, { border: o.pressed === 'true' ? '#1b5fbf' : '#e4e1d8' }); });
+          var windowOpts = mk('win', [
+            { id: '5m', label: '5 min' },
+            { id: '1h', label: '1 hour' },
+            { id: '24h', label: '24 hour' }
+          ]);
+          var WL = { '5m': 'Last 5 min', '1h': 'Last hour', '24h': 'Last 24 hours' };
+          var WH = { '5m': 'Flash moves as they happen.', '1h': 'Active shifts. A good default while markets are busy.', '24h': 'The full picture for the day.' };
+          var n = events.length;
+          var pct = SETTLING[s.win];
+          return {
+            events: events,
+            isEmpty: n === 0,
+            emptyText: (s.hideSettling && pct === 100)
+              ? 'Every top move in the ' + WL[s.win].toLowerCase() + ' is a market settling at 0 or 100%. Turn off "Hide settling markets" to see them.'
+              : 'Nothing matches these filters. Try a wider window or lower intensity.',
+            toggleSettling: function () { self.setState({ hideSettling: !s.hideSettling }); },
+            hidePressed: s.hideSettling ? 'true' : 'false',
+            trackBg: s.hideSettling ? '#1b5fbf' : '#e4e1d8',
+            knobSide: s.hideSettling ? 'flex-end' : 'flex-start',
+            settlingHint: pct + ' of the top 100 here are pinned near 0 or 100%',
+            countLabel: n + (n === 1 ? ' tremor' : ' tremors') + ' · ' + WL[s.win].toLowerCase(),
+            windowLabel: WL[s.win],
+            windowHint: WH[s.win],
+            intensityOpts: intensityOpts,
+            volumeOpts: volumeOpts,
+            windowOpts: windowOpts
+          };
+        }
+      }
+    </script>
+  </body>
+</html>

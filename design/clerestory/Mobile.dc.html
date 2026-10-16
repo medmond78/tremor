@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tremor feed, mobile</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap"
+        />
+        <style>
+          body {
+            margin: 0;
+            background: #fbfaf6;
+          }
+          a {
+            color: #1b5fbf;
+          }
+          a:hover {
+            color: #1c2430;
+          }
+          button {
+            font: inherit;
+            color: inherit;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          width: 390px;
+          height: 844px;
+          box-sizing: border-box;
+          overflow: hidden;
+          background: #fbfaf6;
+          color: #1c2430;
+          font-family: Inter, system-ui, sans-serif;
+          font-size: 16px;
+          line-height: 24px;
+          display: flex;
+          flex-direction: column;
+        "
+      >
+        <header
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid #e4e1d8;
+          "
+        >
+          <div style="font-size: 20px; line-height: 26px; font-weight: 600">
+            Tremor
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px">
+            <span
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-family: 'JetBrains Mono', ui-monospace, monospace;
+                font-size: 12px;
+                line-height: 16px;
+                font-weight: 500;
+                text-transform: uppercase;
+              "
+            >
+              <span
+                aria-hidden="true"
+                style="
+                  width: 8px;
+                  height: 8px;
+                  border-radius: 50%;
+                  background: #3fb37f;
+                "
+              ></span
+              >Live
+            </span>
+            <button
+              type="button"
+              style="
+                min-height: 44px;
+                padding: 0 12px;
+                border: 1px solid #e4e1d8;
+                border-radius: 12px;
+                background: #ffffff;
+                font-size: 13px;
+                font-weight: 600;
+              "
+            >
+              Filters
+            </button>
+          </div>
+        </header>
+
+        <div
+          style="
+            padding: 12px 16px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          "
+        >
+          <div
+            role="group"
+            aria-label="Time window"
+            style="
+              display: grid;
+              grid-template-columns: repeat(3, minmax(0, 1fr));
+              gap: 4px;
+              padding: 4px;
+              border-radius: 12px;
+              background: #e4e1d8;
+            "
+          >
+            <button
+              type="button"
+              aria-pressed="false"
+              style="
+                min-height: 40px;
+                border: 0;
+                border-radius: 9px;
+                background: transparent;
+                font-family: 'JetBrains Mono', ui-monospace, monospace;
+                font-size: 13px;
+                font-weight: 500;
+              "
+            >
+              5 min
+            </button>
+            <button
+              type="button"
+              aria-pressed="false"
+              style="
+                min-height: 40px;
+                border: 0;
+                border-radius: 9px;
+                background: transparent;
+                font-family: 'JetBrains Mono', ui-monospace, monospace;
+                font-size: 13px;
+                font-weight: 500;
+              "
+            >
+              1 hour
+            </button>
+            <button
+              type="button"
+              aria-pressed="true"
+              style="
+                min-height: 40px;
+                border: 0;
+                border-radius: 9px;
+                background: #ffffff;
+                font-family: 'JetBrains Mono', ui-monospace, monospace;
+                font-size: 13px;
+                font-weight: 500;
+              "
+            >
+              24 hour
+            </button>
+          </div>
+          <div style="display: flex; gap: 8px; overflow-x: auto">
+            <button
+              type="button"
+              aria-pressed="true"
+              style="
+                flex: none;
+                min-height: 40px;
+                padding: 0 14px;
+                border-radius: 12px;
+                border: 2px solid #1b5fbf;
+                background: #ffffff;
+                font-size: 13px;
+                font-weight: 600;
+              "
+            >
+              All
+            </button>
+            <button
+              type="button"
+              aria-pressed="false"
+              style="
+                flex: none;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                min-height: 40px;
+                padding: 0 12px;
+                border-radius: 12px;
+                border: 2px solid #e4e1d8;
+                background: transparent;
+                font-size: 13px;
+                font-weight: 600;
+              "
+            >
+              <span
+                aria-hidden="true"
+                style="
+                  width: 12px;
+                  height: 12px;
+                  border-radius: 4px;
+                  background: #f0674f;
+                "
+              ></span
+              >Extreme
+            </button>
+            <button
+              type="button"
+              aria-pressed="false"
+              style="
+                flex: none;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                min-height: 40px;
+                padding: 0 12px;
+                border-radius: 12px;
+                border: 2px solid #e4e1d8;
+                background: transparent;
+                font-size: 13px;
+                font-weight: 600;
+              "
+            >
+              <span
+                aria-hidden="true"
+                style="
+                  width: 12px;
+                  height: 12px;
+                  border-radius: 4px;
+                  background: #f5b82e;
+                "
+              ></span
+              >High
+            </button>
+            <button
+              type="button"
+              aria-pressed="false"
+              style="
+                flex: none;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                min-height: 40px;
+                padding: 0 12px;
+                border-radius: 12px;
+                border: 2px solid #e4e1d8;
+                background: transparent;
+                font-size: 13px;
+                font-weight: 600;
+              "
+            >
+              <span
+                aria-hidden="true"
+                style="
+                  width: 12px;
+                  height: 12px;
+                  border-radius: 4px;
+                  background: #4a9bf0;
+                "
+              ></span
+              >Moderate
+            </button>
+          </div>
+        </div>
+
+        <div
+          style="
+            flex: 1;
+            overflow: hidden;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          "
+        >
+          <section
+            aria-label="Tremor report"
+            style="
+              background: #ffffff;
+              border-radius: 20px;
+              padding: 16px;
+              display: flex;
+              flex-direction: column;
+              gap: 4px;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                font-family: 'JetBrains Mono', ui-monospace, monospace;
+                font-size: 12px;
+                line-height: 16px;
+                font-weight: 500;
+                text-transform: uppercase;
+              "
+            >
+              <span>Tremor report</span
+              ><span style="color: #5d6673">Every 30 min</span>
+            </div>
+            <p
+              style="
+                margin: 0;
+                font-size: 13px;
+                line-height: 18px;
+                color: #5d6673;
+              "
+            >
+              No report yet.
+            </p>
+          </section>
+
+          <article
+            style="
+              background: #ffffff;
+              border-radius: 20px;
+              padding: 16px;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            "
+          >
+            <div style="display: flex; align-items: center; gap: 12px">
+              <div
+                style="
+                  width: 56px;
+                  flex: none;
+                  border-radius: 12px;
+                  padding: 6px 0;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  background: #f0674f;
+                "
+              >
+                <span
+                  style="font-size: 20px; line-height: 26px; font-weight: 600"
+                  >10.0</span
+                >
+                <span
+                  style="
+                    font-family: 'JetBrains Mono', ui-monospace, monospace;
+                    font-size: 10px;
+                    line-height: 14px;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                  "
+                  >Extreme</span
+                >
+              </div>
+              <div style="display: flex; flex-direction: column; min-width: 0">
+                <span style="font-size: 12px; line-height: 16px; color: #5d6673"
+                  >What price will Ethereum hit on October 15?</span
+                >
+                <span
+                  style="font-size: 16px; line-height: 22px; font-weight: 600"
+                  >Will Ethereum reach $2,450 on October 15?</span
+                >
+              </div>
+            </div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+              "
+            >
+              <span
+                style="
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 14px;
+                  line-height: 20px;
+                  font-weight: 500;
+                "
+                >28% → 98%</span
+              >
+              <span
+                style="
+                  padding: 2px 8px;
+                  border-radius: 6px;
+                  border: 1px solid #e4e1d8;
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 12px;
+                  line-height: 16px;
+                  font-weight: 500;
+                "
+                >↑ 70 pp</span
+              >
+              <span
+                style="
+                  padding: 2px 8px;
+                  border-radius: 6px;
+                  border: 1px solid #1b5fbf;
+                  color: #1b5fbf;
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 12px;
+                  line-height: 16px;
+                  font-weight: 500;
+                "
+                >Crossed 50%</span
+              >
+              <span
+                style="
+                  margin-left: auto;
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 12px;
+                  line-height: 16px;
+                  font-weight: 500;
+                  color: #5d6673;
+                "
+                >$81K</span
+              >
+            </div>
+            <div
+              style="
+                padding: 8px 12px;
+                border-radius: 12px;
+                background: #fbfaf6;
+                font-size: 13px;
+                line-height: 18px;
+              "
+            >
+              <span
+                style="
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 12px;
+                  font-weight: 500;
+                  color: #5d6673;
+                  text-transform: uppercase;
+                "
+                >On X </span
+              >[What traders are saying about this move.]
+            </div>
+          </article>
+
+          <article
+            style="
+              background: #ffffff;
+              border-radius: 20px;
+              padding: 16px;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            "
+          >
+            <div style="display: flex; align-items: center; gap: 12px">
+              <div
+                style="
+                  width: 56px;
+                  flex: none;
+                  border-radius: 12px;
+                  padding: 6px 0;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  background: #f5b82e;
+                "
+              >
+                <span
+                  style="font-size: 20px; line-height: 26px; font-weight: 600"
+                  >7.1</span
+                >
+                <span
+                  style="
+                    font-family: 'JetBrains Mono', ui-monospace, monospace;
+                    font-size: 10px;
+                    line-height: 14px;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                  "
+                  >High</span
+                >
+              </div>
+              <div style="display: flex; flex-direction: column; min-width: 0">
+                <span style="font-size: 12px; line-height: 16px; color: #5d6673"
+                  >Next Fable Model (5.2+) released by...?</span
+                >
+                <span
+                  style="font-size: 16px; line-height: 22px; font-weight: 600"
+                  >Next Fable Model (5.2+) released by October 24, 2026?</span
+                >
+              </div>
+            </div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+              "
+            >
+              <span
+                style="
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 14px;
+                  line-height: 20px;
+                  font-weight: 500;
+                "
+                >68% → 78%</span
+              >
+              <span
+                style="
+                  padding: 2px 8px;
+                  border-radius: 6px;
+                  border: 1px solid #e4e1d8;
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 12px;
+                  line-height: 16px;
+                  font-weight: 500;
+                "
+                >↑ 10 pp</span
+              >
+              <span
+                style="
+                  margin-left: auto;
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 12px;
+                  line-height: 16px;
+                  font-weight: 500;
+                  color: #5d6673;
+                "
+                >$60K · 2 mkts</span
+              >
+            </div>
+          </article>
+
+          <article
+            style="
+              background: #ffffff;
+              border-radius: 20px;
+              padding: 16px;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            "
+          >
+            <div style="display: flex; align-items: center; gap: 12px">
+              <div
+                style="
+                  width: 56px;
+                  flex: none;
+                  border-radius: 12px;
+                  padding: 6px 0;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  background: #f5b82e;
+                "
+              >
+                <span
+                  style="font-size: 20px; line-height: 26px; font-weight: 600"
+                  >7.0</span
+                >
+                <span
+                  style="
+                    font-family: 'JetBrains Mono', ui-monospace, monospace;
+                    font-size: 10px;
+                    line-height: 14px;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                  "
+                  >High</span
+                >
+              </div>
+              <div style="display: flex; flex-direction: column; min-width: 0">
+                <span style="font-size: 12px; line-height: 16px; color: #5d6673"
+                  >Will Anthropic’s valuation hit __ by December 31?</span
+                >
+                <span
+                  style="font-size: 16px; line-height: 22px; font-weight: 600"
+                  >Will Anthropic’s valuation hit (HIGH) $1.75T by December
+                  31?</span
+                >
+              </div>
+            </div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+              "
+            >
+              <span
+                style="
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 14px;
+                  line-height: 20px;
+                  font-weight: 500;
+                "
+                >73% → 63%</span
+              >
+              <span
+                style="
+                  padding: 2px 8px;
+                  border-radius: 6px;
+                  border: 1px solid #e4e1d8;
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 12px;
+                  line-height: 16px;
+                  font-weight: 500;
+                "
+                >↓ 10 pp</span
+              >
+              <span
+                style="
+                  margin-left: auto;
+                  font-family: 'JetBrains Mono', ui-monospace, monospace;
+                  font-size: 12px;
+                  line-height: 16px;
+                  font-weight: 500;
+                  color: #5d6673;
+                "
+                >$204K · 4 mkts</span
+              >
+            </div>
+          </article>
+        </div>
+      </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{"$preview":{"width":390,"height":844}}'
+    >
+      class Component extends DCLogic {
+        renderVals() { return {}; }
+      }
+    </script>
+  </body>
+</html>

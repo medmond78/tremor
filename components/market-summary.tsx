@@ -4,68 +4,48 @@ import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
 export function MarketSummary() {
-  // Simply read the cached summary - cron job handles generation
   const summary = useQuery(api.marketSummary.getSummary);
 
-  if (!summary) {
-    return null;
-  }
-
   return (
-    <div className="mt-6 px-5">
-      {/* Header - exactly matching other sections */}
-      <h3 className="mb-4 text-xs font-bold tracking-wider text-zinc-600">
-        TREMOR REPORT
-      </h3>
-
-      {/* Content box - matching the style of time window / intensity boxes */}
-      <div
-        className="border border-zinc-800/50 bg-zinc-950 transition-all hover:border-zinc-600"
-        style={{
-          boxShadow:
-            '0 0 0 1px rgba(255,255,255,0.02), 0 2px 8px rgba(0,0,0,0.3)',
-        }}
-      >
-        <div className="p-3">
-          {summary ? (
-            <>
-              {/* Summary content */}
-              <div className="mb-2 text-[10px] leading-relaxed text-zinc-400">
-                {summary.summary}
-              </div>
-
-              {/* Stats row */}
-              <div className="flex items-center justify-between border-t border-zinc-800/30 pt-2">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <span className="text-sm font-bold text-zinc-100">
-                      {summary.totalMovements}
-                    </span>
-                    <span className="ml-1 text-[10px] text-zinc-500">
-                      active
-                    </span>
-                  </div>
-                  {summary.extremeMovements > 0 && (
-                    <div>
-                      <span className="text-sm font-bold text-tremor-extreme">
-                        {summary.extremeMovements}
-                      </span>
-                      <span className="ml-1 text-[10px] text-zinc-500">
-                        extreme
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Update status */}
-                <div className="text-[10px] text-zinc-500">
-                  {summary.minutesAgo < 1 ? 'now' : summary.minutesAgo < 60 ? `${summary.minutesAgo}m ago` : 'old'}
-                </div>
-              </div>
-            </>
-          ) : null}
-        </div>
+    <section
+      aria-label="Tremor report"
+      className="flex flex-col gap-2 rounded-lg bg-surface p-4 shadow-sm md:p-6"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="font-mono text-xs font-medium uppercase leading-4 text-ink">
+          Tremor report
+        </span>
+        <span className="font-mono text-xs font-medium uppercase leading-4 text-muted">
+          {summary?.minutesAgo !== undefined
+            ? `${summary.minutesAgo < 1 ? 'Just now' : `${summary.minutesAgo}m ago`} · Every 30 min`
+            : 'Every 30 min'}
+        </span>
       </div>
-    </div>
+
+      {summary ? (
+        <>
+          <p className="m-0 text-sm leading-6 text-ink md:text-lg md:leading-7">
+            {summary.summary}
+          </p>
+          {(summary.totalMovements > 0 || summary.extremeMovements > 0) && (
+            <div className="mt-1 flex items-center gap-3 font-mono text-xs font-medium text-muted">
+              <span>{summary.totalMovements} active movements</span>
+              {summary.extremeMovements > 0 && (
+                <>
+                  <span>·</span>
+                  <span className="text-coral">
+                    {summary.extremeMovements} extreme
+                  </span>
+                </>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <p className="m-0 text-sm leading-6 text-muted md:text-lg md:leading-7">
+          No report yet. It will appear here once the first one is generated.
+        </p>
+      )}
+    </section>
   );
 }
