@@ -10,7 +10,10 @@ import {
 } from '@/lib/types';
 import { useEffect, useRef, useState, useMemo } from 'react';
 
-export function useTremorData(window: '5m' | '60m' | '1440m' = '60m') {
+export function useTremorData(
+  window: '5m' | '60m' | '1440m' = '60m',
+  usOnly?: boolean
+) {
   // State for controlled updates
   const [displayedMovements, setDisplayedMovements] = useState<
     MarketMovement[]
@@ -23,6 +26,7 @@ export function useTremorData(window: '5m' | '60m' | '1440m' = '60m') {
   const topTremors = useQuery(api.scoring.getTopTremors, {
     window,
     limit: 100, // Increase limit to get more data
+    usOnly,
   });
 
   // Process and sort the raw data with stable sorting
@@ -34,7 +38,7 @@ export function useTremorData(window: '5m' | '60m' | '1440m' = '60m') {
     );
 
     const movements = topTremors
-      .map((tremor) => {
+      .map((tremor: any) => {
         // Prefer bucket-derived prices from score, fallback to market lastTradePrice
         const curr =
           tremor.topMarketCurrPrice01 ?? tremor.topMarket?.lastTradePrice ?? 0;
@@ -78,23 +82,41 @@ export function useTremorData(window: '5m' | '60m' | '1440m' = '60m') {
               tremor.topMarketQuestion ||
               ''
           ) as MarketCategory,
-          source: 'Polymarket' as MarketSource,
+          source: (tremor.source ||
+            tremor.event?.source ||
+            'Polymarket') as MarketSource,
           previousValue: Math.round(previousPrice * 100),
           currentValue: Math.round(currentPrice * 100),
           change: priceChangePercent,
           timestamp: new Date(tremor.timestampMs),
           totalVolume: tremor.totalVolume || tremor.event?.volume || 0,
-          url: tremor.event?.slug
-            ? `https://polymarket.com/event/${tremor.event.slug}`
-            : '#',
-          usUrl: undefined,
-          globalUrl: tremor.event?.slug
-            ? `https://polymarket.com/event/${tremor.event.slug}`
-            : undefined,
+          url:
+            tremor.event?.url ||
+            (tremor.event?.slug
+              ? tremor.event?.source === 'Kalshi'
+                ? `https://kalshi.com/markets/${tremor.event.slug}`
+                : `https://polymarket.com/event/${tremor.event.slug}`
+              : '#'),
+          usUrl:
+            tremor.event?.source === 'Kalshi'
+              ? tremor.event?.url ||
+                `https://kalshi.com/markets/${tremor.event.slug}`
+              : undefined,
+          globalUrl:
+            tremor.event?.source === 'Kalshi'
+              ? tremor.event?.url ||
+                `https://kalshi.com/markets/${tremor.event.slug}`
+              : tremor.event?.slug
+                ? `https://polymarket.com/event/${tremor.event.slug}`
+                : undefined,
           image: tremor.event?.image,
           seismoScore: tremor.seismoScore,
           restricted:
-            tremor.restricted !== false && tremor.event?.restricted !== false,
+            tremor.restricted !== undefined
+              ? tremor.restricted
+              : tremor.event?.restricted !== undefined
+                ? tremor.event.restricted
+                : true,
           marketMovements: marketMoves,
           multiMarketStats:
             marketMoves.length > 1
@@ -110,9 +132,11 @@ export function useTremorData(window: '5m' | '60m' | '1440m' = '60m') {
         };
       })
       // CRITICAL FIX: Allow markets at 0%, only filter null/undefined
-      .filter((m) => m.currentValue !== null && m.currentValue !== undefined)
+      .filter(
+        (m: any) => m.currentValue !== null && m.currentValue !== undefined
+      )
       // Filter out zero intensity scores - no point showing markets with no movement
-      .filter((m) => {
+      .filter((m: any) => {
         const pass = m.seismoScore && m.seismoScore > 0;
         if (!pass) {
           console.log(
@@ -122,7 +146,7 @@ export function useTremorData(window: '5m' | '60m' | '1440m' = '60m') {
         return pass;
       })
       // Stable sorting: Sort by seismoScore DESC, then by eventId for stability
-      .sort((a, b) => {
+      .sort((a: any, b: any) => {
         // Primary sort by seismoScore (descending)
         const scoreDiff = (b.seismoScore || 0) - (a.seismoScore || 0);
         if (scoreDiff !== 0) return scoreDiff;

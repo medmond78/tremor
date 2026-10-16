@@ -83,9 +83,12 @@ export const TremorCard = memo(function TremorCard({
           </span>
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-xs leading-4 text-muted">
-            {eventTitle}
-          </span>
+          <div className="flex items-center gap-1.5 text-xs text-muted">
+            <span className="rounded-sm bg-line/60 px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase text-ink">
+              {movement.source || 'Polymarket'}
+            </span>
+            <span className="truncate">{eventTitle}</span>
+          </div>
           <h3 className="line-clamp-2 text-base font-semibold leading-[22px] text-ink">
             {question}
           </h3>
@@ -109,7 +112,10 @@ export const TremorCard = memo(function TremorCard({
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         {/* Desktop Event Title + Question */}
         <div className="hidden flex-col gap-1 sm:flex">
-          <div className="flex flex-wrap gap-2 text-[13px] leading-[18px] text-muted">
+          <div className="flex flex-wrap items-center gap-2 text-[13px] leading-[18px] text-muted">
+            <span className="rounded-sm bg-line/60 px-1.5 py-0.5 font-mono text-[11px] font-medium uppercase text-ink">
+              {movement.source || 'Polymarket'}
+            </span>
             <span>{eventTitle}</span>
           </div>
           <h3 className="m-0 text-xl font-semibold leading-[26px] text-ink">
@@ -139,9 +145,13 @@ export const TremorCard = memo(function TremorCard({
             </span>
           )}
 
-          {isRestricted && (
+          {isRestricted ? (
             <span className="rounded-sm border border-line bg-paper px-2 py-0.5 font-mono text-xs font-medium text-muted">
               Global only
+            </span>
+          ) : (
+            <span className="rounded-sm border border-emerald-300 bg-emerald-50 px-2 py-0.5 font-mono text-xs font-medium text-emerald-800">
+              US tradeable
             </span>
           )}
 
@@ -155,7 +165,7 @@ export const TremorCard = memo(function TremorCard({
         </div>
       </div>
 
-      {/* Open market link to Polymarket */}
+      {/* Open market link */}
       {movement.url && movement.url !== '#' && (
         <a
           href={movement.url}
@@ -163,13 +173,19 @@ export const TremorCard = memo(function TremorCard({
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           aria-label={
-            isRestricted
-              ? `View ${movement.title} on Polymarket`
-              : `Trade ${movement.title} on Polymarket`
+            movement.source === 'Kalshi'
+              ? `Trade ${movement.title} on Kalshi`
+              : isRestricted
+                ? `View ${movement.title} on Polymarket`
+                : `Trade ${movement.title} on Polymarket`
           }
           className="inline-flex min-h-[44px] flex-none items-center justify-end px-2 text-[13px] font-semibold text-sky-deep no-underline transition-colors hover:text-ink sm:self-center"
         >
-          {isRestricted ? 'View on Polymarket' : 'Open market'}
+          {movement.source === 'Kalshi'
+            ? 'Trade on Kalshi ↗'
+            : isRestricted
+              ? 'View on Polymarket'
+              : 'Open market'}
         </a>
       )}
     </article>

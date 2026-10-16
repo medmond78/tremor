@@ -126,3 +126,44 @@ export const getRecentSnapshots = query({
     return snapshots;
   },
 });
+
+// Idempotent batch insertion for time-series snapshots (e.g. Kalshi candlesticks or direct price points)
+export const insertBatchSnapshots = internalMutation({
+  args: {
+    snapshots: v.array(
+      v.object({
+        conditionId: v.string(),
+        eventId: v.string(),
+        timestampMs: v.number(),
+        price01: v.float64(),
+        volumeSince: v.float64(),
+        volumeUsdSince: v.optional(v.float64()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    let processed = 0;
+    for (const snap of args.snapshots) {
+      const existing = await ctx.db
+        .query('priceSnapshots')
+        .withIndex('by_market_time', (q) =>
+          q
+            .eq('conditionId', snap.conditionId)
+            .eq('timestampMs', snap.timestampMs)
+        )
+        .first();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          price01: snap.price01,
+          volumeSince: snap.volumeSince,
+          volumeUsdSince: snap.volumeUsdSince,
+        });
+      } else {
+        await ctx.db.insert('priceSnapshots', snap);
+      }
+      processed++;
+    }
+    return { processed };
+  },
+});

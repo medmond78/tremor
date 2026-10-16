@@ -24,6 +24,7 @@ import type * as crons from '../crons.js';
 import type * as debugMarket from '../debugMarket.js';
 import type * as events from '../events.js';
 import type * as http from '../http.js';
+import type * as kalshiActions from '../kalshiActions.js';
 import type * as marketSummary from '../marketSummary.js';
 import type * as markets from '../markets.js';
 import type * as migrate from '../migrate.js';
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   debugMarket: typeof debugMarket;
   events: typeof events;
   http: typeof http;
+  kalshiActions: typeof kalshiActions;
   marketSummary: typeof marketSummary;
   markets: typeof markets;
   migrate: typeof migrate;

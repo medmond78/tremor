@@ -27,7 +27,7 @@ export default function Home() {
     useState<MarketMovement | null>(null);
   const [isChangingWindow, setIsChangingWindow] = useState(false);
 
-  const { movements, loading } = useTremorData(windowSel);
+  const { movements, loading } = useTremorData(windowSel, usOnly);
 
   // Handle ESC key to close panel
   useEffect(() => {

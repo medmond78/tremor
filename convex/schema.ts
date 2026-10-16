@@ -17,6 +17,8 @@ export default defineSchema({
     volume24hr: v.float64(),
     volumeUsd24hr: v.optional(v.float64()), // USD volume for better sorting
     restricted: v.optional(v.boolean()), // Regional/US trading restriction
+    source: v.optional(v.string()), // 'Polymarket' | 'Kalshi'
+    url: v.optional(v.string()), // Canonical market/trading URL
     updatedAt: v.number(),
     lastScoreMs: v.optional(v.number()), // Track when last scored
   })
@@ -38,6 +40,7 @@ export default defineSchema({
     spread: v.optional(v.float64()), // Bid-ask spread for liquidity
     volume24hr: v.float64(),
     volumeUsd24hr: v.optional(v.float64()), // USD volume
+    source: v.optional(v.string()), // 'Polymarket' | 'Kalshi'
     updatedAt: v.number(),
     lastChangeMs: v.optional(v.number()), // Track significant changes
   })
@@ -87,6 +90,7 @@ export default defineSchema({
     totalVolume: v.optional(v.float64()),
     activeMarkets: v.optional(v.number()),
     restricted: v.optional(v.boolean()),
+    source: v.optional(v.string()), // 'Polymarket' | 'Kalshi'
   })
     .index('by_event_window', ['eventId', 'window'])
     .index('by_window_score', ['window', 'seismoScore', 'updatedAt']),

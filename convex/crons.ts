@@ -3,21 +3,11 @@ import { internal } from './_generated/api';
 
 const crons = cronJobs();
 
-// Sync events and markets every 2 minutes
-crons.interval('sync events', { minutes: 2 }, internal.actions.syncEvents);
-
-// Sync hot market trades every 15 seconds
+// Sync Kalshi events and markets every 1 minute
 crons.interval(
-  'sync hot trades',
-  { seconds: 15 },
-  internal.actions.syncHotTrades
-);
-
-// Sync warm market trades every minute
-crons.interval(
-  'sync warm trades',
+  'sync kalshi events',
   { minutes: 1 },
-  internal.actions.syncWarmTrades
+  internal.kalshiActions.syncKalshiEvents
 );
 
 // Update materialized scores every 1 minute

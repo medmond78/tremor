@@ -263,8 +263,8 @@ export function Sidebar({
               </span>
               <span className="text-[13px] leading-[18px] text-muted">
                 {usOnly
-                  ? `Hiding non-US restricted bets${restrictedCount !== undefined ? ` (${restrictedCount} hidden)` : ''}`
-                  : `Showing all markets${restrictedCount !== undefined ? ` (${restrictedCount} non-US)` : ''}`}
+                  ? `Showing US-regulated markets (Kalshi)${restrictedCount !== undefined ? ` · ${restrictedCount} hidden` : ''}`
+                  : `Showing all markets${restrictedCount !== undefined ? ` (${restrictedCount} global-only)` : ''}`}
               </span>
             </span>
           </button>
@@ -274,6 +274,15 @@ export function Sidebar({
       {/* Attribution */}
       <p className="m-0 text-[13px] leading-[18px] text-muted">
         Market data from{' '}
+        <a
+          href="https://kalshi.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sky-deep transition-colors hover:text-ink"
+        >
+          Kalshi
+        </a>{' '}
+        &amp;{' '}
         <a
           href="https://polymarket.com"
           target="_blank"

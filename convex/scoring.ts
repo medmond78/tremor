@@ -215,19 +215,34 @@ export const getTopTremors = query({
   args: {
     window: v.optional(v.string()),
     limit: v.optional(v.number()),
+    usOnly: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const window = args.window || '60m';
-    const limit = args.limit || 20;
+    const limit = args.limit || 50;
 
-    // Prefer scores_lite if populated; otherwise compute on read for top active events
-    const cached = await ctx.db
+    // Fetch Kalshi tremors first
+    const kalshiTremors = await ctx.db
       .query('scores_lite')
       .withIndex('by_window_score', (q) => q.eq('window', window))
+      .filter((q) => q.eq(q.field('source'), 'Kalshi'))
       .order('desc')
       .take(limit);
 
-    const items = cached.length > 0 ? cached : [];
+    let items = kalshiTremors;
+
+    // If not US-only and we have room, backfill with global tremors
+    if (!args.usOnly && items.length < limit) {
+      const remaining = limit - items.length;
+      const globalTremors = await ctx.db
+        .query('scores_lite')
+        .withIndex('by_window_score', (q) => q.eq('window', window))
+        .filter((q) => q.neq(q.field('source'), 'Kalshi'))
+        .order('desc')
+        .take(remaining);
+
+      items = [...items, ...globalTremors];
+    }
 
     // Join with event/market if available
     const results: Array<any> = [];
@@ -275,6 +290,7 @@ export const getTopTremors = query({
         totalVolume: score.totalVolume,
         activeMarkets: score.activeMarkets,
         restricted: score.restricted ?? event?.restricted ?? true,
+        source: score.source ?? event?.source ?? 'Polymarket',
       });
     }
 
@@ -308,6 +324,7 @@ export const upsertScoreLite = internalMutation({
     totalVolume: v.optional(v.float64()),
     activeMarkets: v.optional(v.number()),
     restricted: v.optional(v.boolean()),
+    source: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -331,6 +348,7 @@ export const upsertScoreLite = internalMutation({
       totalVolume: args.totalVolume,
       activeMarkets: args.activeMarkets,
       restricted: args.restricted,
+      source: args.source,
     };
 
     if (existing) {
@@ -345,8 +363,8 @@ export const upsertScoreLite = internalMutation({
 export const updateScoresLite = internalAction({
   args: {},
   handler: async (ctx) => {
-    const events = await ctx.runQuery(api.events.getActiveEvents, {
-      limit: 500,
+    const events = await ctx.runQuery(api.events.getEventsForScoring, {
+      limit: 300,
     });
     const windows = [5, 60, 1440];
     const concurrency = 10;
@@ -354,7 +372,7 @@ export const updateScoresLite = internalAction({
     for (let i = 0; i < events.length; i += concurrency) {
       const batch = events.slice(i, i + concurrency);
       await Promise.all(
-        batch.map(async (event) => {
+        batch.map(async (event: any) => {
           for (const windowMinutes of windows) {
             const scoreData = await ctx.runQuery(
               api.scoring.computeEventScore,
@@ -377,6 +395,7 @@ export const updateScoresLite = internalAction({
                 totalVolume: scoreData.totalVolume,
                 activeMarkets: scoreData.activeMarkets,
                 restricted: event.restricted,
+                source: event.source,
               });
             }
           }

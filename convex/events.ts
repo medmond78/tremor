@@ -17,6 +17,8 @@ export const upsertEvent = internalMutation({
       volume: v.optional(v.float64()),
       volume24hr: v.float64(),
       restricted: v.optional(v.boolean()),
+      source: v.optional(v.string()),
+      url: v.optional(v.string()),
     }),
   },
   handler: async (ctx, args) => {
@@ -59,6 +61,48 @@ export const backfillRestricted = mutation({
   },
 });
 
+// Deactivate Polymarket events so Kalshi is the primary active exchange
+export const deactivatePolymarket = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const polymarketEvents = await ctx.db
+      .query('events')
+      .filter((q) =>
+        q.or(
+          q.eq(q.field('source'), 'Polymarket'),
+          q.eq(q.field('source'), undefined)
+        )
+      )
+      .take(1000);
+
+    let deactivated = 0;
+    for (const event of polymarketEvents) {
+      if (event.active) {
+        await ctx.db.patch(event._id, { active: false, source: 'Polymarket' });
+        deactivated++;
+      }
+    }
+
+    const polymarketScores = await ctx.db
+      .query('scores_lite')
+      .filter((q) =>
+        q.or(
+          q.eq(q.field('source'), 'Polymarket'),
+          q.eq(q.field('source'), undefined)
+        )
+      )
+      .take(1000);
+
+    let scoresRemoved = 0;
+    for (const score of polymarketScores) {
+      await ctx.db.delete(score._id);
+      scoresRemoved++;
+    }
+
+    return { deactivated, scoresRemoved };
+  },
+});
+
 // Get active events sorted by volume
 export const getActiveEvents = query({
   args: {
@@ -74,6 +118,23 @@ export const getActiveEvents = query({
       .take(limit);
 
     return events;
+  },
+});
+
+// Get active events for scoring - focused on Kalshi prediction markets
+export const getEventsForScoring = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 200;
+
+    const kalshiEvents = await ctx.db
+      .query('events')
+      .filter((q) => q.eq(q.field('source'), 'Kalshi'))
+      .take(limit);
+
+    return kalshiEvents;
   },
 });
 

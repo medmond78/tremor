@@ -182,13 +182,16 @@ export function TremorDetailPanel({
                         <span className="text-ink">{movement.category}</span>
                       </div>
                     )}
+                    <span className="rounded-sm bg-line/60 px-2 py-0.5 font-mono text-xs font-medium uppercase text-ink">
+                      {movement?.source || 'Polymarket'}
+                    </span>
                     {movement?.restricted ? (
                       <span className="rounded-sm border border-line bg-paper px-2 py-0.5 font-mono text-xs font-medium text-muted">
                         Global only
                       </span>
                     ) : (
-                      <span className="bg-sky-tint rounded-sm border border-sky-deep/20 px-2 py-0.5 font-mono text-xs font-medium text-sky-deep">
-                        US Accessible
+                      <span className="rounded-sm border border-emerald-300 bg-emerald-50 px-2 py-0.5 font-mono text-xs font-medium text-emerald-800">
+                        US tradeable
                       </span>
                     )}
                   </div>
@@ -453,9 +456,11 @@ export function TremorDetailPanel({
                     className="inline-flex min-h-[36px] items-center gap-1.5 rounded-sm bg-sky-deep px-3.5 py-1.5 text-xs font-semibold text-surface transition-colors hover:bg-ink"
                   >
                     <span>
-                      {movement.restricted
-                        ? 'View on Polymarket'
-                        : 'Open market'}
+                      {movement.source === 'Kalshi'
+                        ? 'Trade on Kalshi'
+                        : movement.restricted
+                          ? 'View on Polymarket'
+                          : 'Open market'}
                     </span>
                     <span aria-hidden="true">↗</span>
                   </a>

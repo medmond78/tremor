@@ -54,7 +54,7 @@ function getInitialState(): UserPreferences {
     intensityFilter: 'all',
     volumeFilter: 'all',
     hideSettling: true,
-    usOnly: false,
+    usOnly: true,
   };
 }
 
